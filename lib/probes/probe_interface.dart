@@ -1,5 +1,5 @@
-import '../transport/telnet_transport.dart';
-import '../models/audit_result.dart';
+import 'package:telnet_sentinel/transport/telnet_transport.dart';
+import 'package:telnet_sentinel/models/audit_result.dart';
 
 abstract class Probe {
   String get name;

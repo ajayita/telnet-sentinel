@@ -105,5 +105,32 @@ void main() {
       expect(events[2].type, TelnetEventType.data);
       expect(events[2].bytes, 'More'.codeUnits);
     });
+
+    test('handles 2-byte commands (e.g., AYT)', () async {
+      final events = <TelnetEvent>[];
+      final completer = Completer<void>();
+      
+      transport.events.listen((event) {
+        events.add(event);
+        if (events.length == 3) {
+          completer.complete();
+        }
+      });
+
+      // Send: "Pre" + IAC AYT (0xFF 0xF6) + "Post"
+      clientSocket.write('Pre'.codeUnits);
+      clientSocket.write([0xFF, 0xF6]);
+      clientSocket.write('Post'.codeUnits);
+
+      await completer.future.timeout(Duration(seconds: 2));
+
+      expect(events.length, 3);
+      expect(events[0].type, TelnetEventType.data);
+      expect(events[0].bytes, 'Pre'.codeUnits);
+      expect(events[1].type, TelnetEventType.iac);
+      expect(events[1].bytes, [0xFF, 0xF6]);
+      expect(events[2].type, TelnetEventType.data);
+      expect(events[2].bytes, 'Post'.codeUnits);
+    });
   });
 }

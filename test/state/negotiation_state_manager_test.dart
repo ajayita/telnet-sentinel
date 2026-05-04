@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import '../../lib/state/negotiation_state_manager.dart';
+import 'package:telnet_sentinel/state/negotiation_state_manager.dart';
 
 void main() {
   group('NegotiationStateManager', () {
@@ -141,6 +141,11 @@ void main() {
       
       manager.handleDont(option);
       expect(sentBytes, isEmpty);
+    });
+
+    test('receiving AYT should send NOP', () {
+      manager.handleCommand([255, 246]); // IAC AYT
+      expect(sentBytes, equals([255, 241])); // IAC NOP
     });
   });
 }
