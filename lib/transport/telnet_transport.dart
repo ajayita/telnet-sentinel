@@ -96,4 +96,8 @@ class TelnetTransport {
     _socket.close();
     _onDone();
   }
+
+  void write(List<int> bytes) {
+    _socket.write(bytes);
+  }
 }

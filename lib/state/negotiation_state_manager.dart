@@ -143,4 +143,24 @@ class NegotiationStateManager {
   void _send(int command, int option) {
     onSend(Uint8List.fromList([iac, command, option]));
   }
+
+  void handleCommand(List<int> bytes) {
+    if (bytes.length < 3 || bytes[0] != iac) return;
+    int command = bytes[1];
+    int option = bytes[2];
+    switch (command) {
+      case will:
+        handleWill(option);
+        break;
+      case wont:
+        handleWont(option);
+        break;
+      case doCmd:
+        handleDo(option);
+        break;
+      case dont:
+        handleDont(option);
+        break;
+    }
+  }
 }
