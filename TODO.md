@@ -15,13 +15,13 @@ This file tracks the implementation of the Telnet Sentinel core features. For de
     - [x] Write unit tests for state transitions
 
 ## Phase 3: Probing & Handshake
-- [ ] Task 3: Probe Interface & Handshake Audit
-    - [ ] Define ProbeInterface
-    - [ ] Implement HandshakeProbe
-    - [ ] Write tests for HandshakeProbe
+- [x] Task 3: Probe Interface & Handshake Audit
+    - [x] Define ProbeInterface
+    - [x] Implement HandshakeProbe
+    - [x] Write tests for HandshakeProbe
 
 ## Phase 4: CLI & Reporting
-- [ ] Task 4: CLI Integration & Reporting
-    - [ ] Implement AuditReport model
-    - [ ] Update CLI to use TelnetTransport and Probes
-    - [ ] Implement human-readable console output
+- [x] Task 4: CLI Integration & Reporting
+    - [x] Implement AuditReport model
+    - [x] Update CLI to use TelnetTransport and Probes
+    - [x] Implement human-readable console output
