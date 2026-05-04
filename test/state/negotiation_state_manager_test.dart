@@ -18,7 +18,6 @@ void main() {
 
     test('receiving DO ECHO when state is NO should send WILL ECHO', () {
       const echoOption = 1;
-      const doCmd = 253;
       const willCmd = 251;
       const iac = 255;
 
@@ -29,8 +28,6 @@ void main() {
 
     test('receiving DO ECHO when state is already YES should do nothing', () {
       const echoOption = 1;
-      const doCmd = 253;
-      const iac = 255;
 
       // Set state to YES
       manager.handleDo(echoOption);
@@ -55,8 +52,6 @@ void main() {
 
     test('receiving WILL BINARY after local DO should update state to YES and send nothing', () {
       const binaryOption = 0;
-      const iac = 255;
-      const willCmd = 251;
 
       manager.requestDo(binaryOption);
       sentBytes.clear();

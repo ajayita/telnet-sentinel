@@ -30,7 +30,7 @@ class TelnetTransport {
     }
   }
 
-  void _onError(error) {
+  void _onError(Object error) {
     if (!_controller.isClosed) {
       _controller.addError(error);
     }

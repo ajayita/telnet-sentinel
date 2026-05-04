@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:telnet_sentinel/transport/telnet_transport.dart';
 import 'package:telnet_sentinel/models/audit_result.dart';
 import 'package:telnet_sentinel/models/telnet_event.dart';

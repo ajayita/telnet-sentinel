@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:async';
 import 'package:test/test.dart';
 import 'package:telnet_sentinel/transport/telnet_transport.dart';
 import 'package:telnet_sentinel/probes/handshake_probe.dart';
