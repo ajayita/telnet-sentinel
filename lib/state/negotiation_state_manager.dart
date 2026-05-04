@@ -13,6 +13,19 @@ class NegotiationStateManager {
   static const int doCmd = 253;
   static const int wont = 252;
   static const int will = 251;
+  static const int sb = 250;
+  static const int ga = 249;
+  static const int el = 248;
+  static const int ec = 247;
+  static const int ayt = 246;
+  static const int ao = 245;
+  static const int ip = 244;
+  static const int brk = 243;
+  static const int dm = 242;
+  static const int nop = 241;
+  static const int se = 240;
+
+  static const int transmitBinary = 0;
 
   final void Function(Uint8List) onSend;
   final Map<int, OptionState> usStates = {};
@@ -145,22 +158,33 @@ class NegotiationStateManager {
   }
 
   void handleCommand(List<int> bytes) {
-    if (bytes.length < 3 || bytes[0] != iac) return;
+    if (bytes.length < 2 || bytes[0] != iac) return;
     int command = bytes[1];
-    int option = bytes[2];
-    switch (command) {
-      case will:
-        handleWill(option);
-        break;
-      case wont:
-        handleWont(option);
-        break;
-      case doCmd:
-        handleDo(option);
-        break;
-      case dont:
-        handleDont(option);
-        break;
+    
+    if (command >= 251 && command <= 254) {
+      if (bytes.length < 3) return;
+      int option = bytes[2];
+      switch (command) {
+        case will:
+          handleWill(option);
+          break;
+        case wont:
+          handleWont(option);
+          break;
+        case doCmd:
+          handleDo(option);
+          break;
+        case dont:
+          handleDont(option);
+          break;
+      }
+    } else if (command == ayt) {
+      handleAyt();
     }
+  }
+
+  void handleAyt() {
+    // Respond with NOP as a default "I am here"
+    onSend(Uint8List.fromList([iac, nop]));
   }
 }

@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:test/test.dart';
 import 'package:telnet_sentinel/transport/telnet_transport.dart';
-import 'package:telnet_sentinel/probes/handshake_probe.dart';
+import 'package:telnet_sentinel/probes/binary_mode_probe.dart';
 import 'package:telnet_sentinel/models/audit_result.dart';
 
 void main() {
-  group('HandshakeProbe', () {
+  group('BinaryModeProbe', () {
     late RawServerSocket server;
     late TelnetTransport transport;
     late RawSocket clientSocket;
@@ -25,14 +25,15 @@ void main() {
       await server.close();
     });
 
-    test('returns pass when server responds with WILL TTYPE', () async {
-      final probe = HandshakeProbe();
+    test('returns pass when server responds with WILL BINARY', () async {
+      final probe = BinaryModeProbe();
       
       clientSocket.listen((event) {
         if (event == RawSocketEvent.read) {
           final bytes = clientSocket.read();
-          if (bytes != null && bytes.length >= 3 && bytes[0] == 255 && bytes[1] == 253 && bytes[2] == 24) {
-            clientSocket.write([255, 251, 24]);
+          // Expect IAC DO BINARY (255 253 0)
+          if (bytes != null && bytes.length >= 3 && bytes[0] == 255 && bytes[1] == 253 && bytes[2] == 0) {
+            clientSocket.write([255, 251, 0]);
           }
         }
       });
@@ -40,17 +41,18 @@ void main() {
       final result = await probe.run(transport);
 
       expect(result.status, AuditStatus.pass);
-      expect(result.message, contains('WILL'));
+      expect(result.message, contains('WILL BINARY'));
     });
 
-    test('returns pass when server responds with WONT TTYPE', () async {
-      final probe = HandshakeProbe();
+    test('returns pass when server responds with WONT BINARY', () async {
+      final probe = BinaryModeProbe();
       
       clientSocket.listen((event) {
         if (event == RawSocketEvent.read) {
           final bytes = clientSocket.read();
-          if (bytes != null && bytes.length >= 3 && bytes[0] == 255 && bytes[1] == 253 && bytes[2] == 24) {
-            clientSocket.write([255, 252, 24]);
+          // Expect IAC DO BINARY (255 253 0)
+          if (bytes != null && bytes.length >= 3 && bytes[0] == 255 && bytes[1] == 253 && bytes[2] == 0) {
+            clientSocket.write([255, 252, 0]);
           }
         }
       });
@@ -58,14 +60,11 @@ void main() {
       final result = await probe.run(transport);
 
       expect(result.status, AuditStatus.pass);
-      expect(result.message, contains('WONT'));
+      expect(result.message, contains('WONT BINARY'));
     });
 
     test('returns fail on timeout', () async {
-      // Create a probe with a very short timeout for testing if possible, 
-      // but since it's hardcoded to 5s, we'll just have to wait or mock it.
-      // For now, let's just wait since 5s is not that long.
-      final probe = HandshakeProbe();
+      final probe = BinaryModeProbe();
       
       final result = await probe.run(transport);
 

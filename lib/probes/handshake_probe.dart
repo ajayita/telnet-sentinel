@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:typed_data';
-import '../transport/telnet_transport.dart';
-import '../models/audit_result.dart';
-import '../models/telnet_event.dart';
-import '../state/negotiation_state_manager.dart';
+import 'package:telnet_sentinel/transport/telnet_transport.dart';
+import 'package:telnet_sentinel/models/audit_result.dart';
+import 'package:telnet_sentinel/models/telnet_event.dart';
+import 'package:telnet_sentinel/state/negotiation_state_manager.dart';
 import 'probe_interface.dart';
 
 class HandshakeProbe implements Probe {
