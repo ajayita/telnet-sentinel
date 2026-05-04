@@ -54,10 +54,15 @@ class TelnetTransport {
           } else if (command == 250) { // SB (Subnegotiation)
             // Search for SE (IAC SE = 255 240)
             int seIndex = -1;
-            for (int j = 1; j < _pendingBytes.length - 1; j++) {
-              if (_pendingBytes[j] == 255 && _pendingBytes[j+1] == 240) {
-                seIndex = j + 1;
-                break;
+            for (int j = 2; j < _pendingBytes.length - 1; j++) {
+              if (_pendingBytes[j] == 255) {
+                if (_pendingBytes[j+1] == 240) {
+                  seIndex = j + 1;
+                  break;
+                } else if (_pendingBytes[j+1] == 255) {
+                  // Escaped IAC inside SB, skip the second IAC
+                  j++;
+                }
               }
             }
             if (seIndex != -1) {

@@ -25,6 +25,8 @@ class NegotiationStateManager {
   static const int nop = 241;
   static const int se = 240;
 
+  static const int transmitBinary = 0;
+
   final void Function(Uint8List) onSend;
   final Map<int, OptionState> usStates = {};
   final Map<int, OptionState> themStates = {};
