@@ -1,27 +1,30 @@
 # Project TODO
 
-This file tracks the implementation of the Telnet Sentinel core features. For detailed instructions, see the [Core Implementation Plan](docs/superpowers/plans/2026-05-04-core-auditor-implementation.md).
+This file tracks the implementation of the Telnet Sentinel core features.
 
-## Phase 1: Foundation
+## Phase 1: Foundation (COMPLETE)
 - [x] Task 1: Foundation - Transport & Basic IAC Models
-    - [x] Define Telnet Event models
-    - [x] Create TelnetTransport using RawSocket
-    - [x] Write tests for byte-stream separation
-
-## Phase 2: State Management
 - [x] Task 2: Negotiation State Manager
-    - [x] Implement the WILL/WONT/DO/DONT state machine
-    - [x] Handle loop prevention
-    - [x] Write unit tests for state transitions
-
-## Phase 3: Probing & Handshake
 - [x] Task 3: Probe Interface & Handshake Audit
-    - [x] Define ProbeInterface
-    - [x] Implement HandshakeProbe
-    - [x] Write tests for HandshakeProbe
-
-## Phase 4: CLI & Reporting
 - [x] Task 4: CLI Integration & Reporting
-    - [x] Implement AuditReport model
-    - [x] Update CLI to use TelnetTransport and Probes
-    - [x] Implement human-readable console output
+
+## Phase 5: Exhaustive Core Telnet Implementation (RFC 854) (COMPLETE)
+- [x] **Task 5.1: Core Command Handling**
+- [x] **Task 5.2: Advanced Sub-negotiation (SB/SE)**
+- [x] **Task 5.3: Core Protocol Probes**
+- [x] **Task 5.4: Stress & Adversarial Testing**
+
+## Phase 6: MUD Extensions (PLANNED)
+- [ ] **Task 6.1: MCCP (Zlib Compression)**
+    - [ ] Add Zlib dependency
+    - [ ] Implement `MccpTransportLayer` for stream decompression
+    - [ ] Implement `MccpProbe`
+- [ ] **Task 6.2: GMCP/MSDP (Out-of-band Data)**
+    - [ ] Implement JSON parser for GMCP
+    - [ ] Implement `GmcpProbe` to verify structured data leakage
+
+## Phase 7: UI & Reporting Enhancements (PLANNED)
+- [ ] **Task 7.1: JSON Output**
+    - [ ] Implement `--json` flag for machine-readable reports
+- [ ] **Task 7.2: Traffic Visualizer**
+    - [ ] Implement a live traffic view showing IAC handshakes in real-time
