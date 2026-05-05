@@ -3,7 +3,14 @@ import 'dart:convert';
 import 'package:args/args.dart';
 import 'package:telnet_sentinel/transport/telnet_transport.dart';
 import 'package:telnet_sentinel/models/telnet_event.dart';
+import 'package:telnet_sentinel/probes/probe_interface.dart';
 import 'package:telnet_sentinel/probes/handshake_probe.dart';
+import 'package:telnet_sentinel/probes/ayt_probe.dart';
+import 'package:telnet_sentinel/probes/binary_mode_probe.dart';
+import 'package:telnet_sentinel/probes/gmcp_probe.dart';
+import 'package:telnet_sentinel/probes/mccp_probe.dart';
+import 'package:telnet_sentinel/probes/malformed_iac_probe.dart';
+import 'package:telnet_sentinel/probes/negotiation_loop_probe.dart';
 import 'package:telnet_sentinel/models/audit_report.dart';
 import 'package:telnet_sentinel/models/audit_result.dart';
 
@@ -89,6 +96,16 @@ Future<void> main(List<String> arguments) async {
     if (!outputJson) {
       print('Starting audit for $host:$port...');
     }
+
+    final probes = <Probe>[
+      HandshakeProbe(),
+      AytProbe(),
+      BinaryModeProbe(),
+      GmcpProbe(),
+      MccpProbe(),
+      MalformedIacProbe(),
+      NegotiationLoopProbe(),
+    ];
 
     RawSocket socket;
     try {
