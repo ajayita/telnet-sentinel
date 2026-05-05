@@ -16,7 +16,6 @@ class GoodServer {
             final response = <int>[];
             for (var b in data) {
               response.add(b);
-              if (b == 255) response.add(255); // escape IAC
             }
             client.write(response);
           }
