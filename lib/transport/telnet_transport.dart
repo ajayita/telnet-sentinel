@@ -24,12 +24,7 @@ class TelnetTransport {
       final bytes = _socket.read();
       if (bytes != null) {
         if (_isDecompressing) {
-          try {
-            final decompressed = zlib.decoder.convert(bytes);
-            _processBytes(decompressed);
-          } catch (e) {
-            _onError(e);
-          }
+          _decompressorSink?.add(bytes);
         } else {
           _processBytes(bytes);
         }
@@ -51,10 +46,12 @@ class TelnetTransport {
     }
   }
 
-  void _processBytes(List<int> bytes) {
+  void _processBytes(List<int> bytes, {bool fromDecompressor = false}) {
     _pendingBytes.addAll(bytes);
     
-    if (_isProcessing) return;
+    if (_isProcessing) {
+      return;
+    }
     _isProcessing = true;
 
     try {
@@ -90,14 +87,14 @@ class TelnetTransport {
                 _pendingBytes.removeRange(0, seIndex + 1);
 
                 // MCCP2 check: IAC SB 86 IAC SE
-                if (sbBytes.length == 5 && sbBytes[2] == 86 && !_isDecompressing) {
+                if (sbBytes.length == 5 && sbBytes[2] == 86 && !_isDecompressing && !fromDecompressor) {
                   _startDecompression();
                   if (_pendingBytes.isNotEmpty) {
                     final remaining = List<int>.from(_pendingBytes);
                     _pendingBytes.clear();
                     _decompressorSink?.add(remaining);
                   }
-                  return;
+                  continue;
                 }
               } else {
                 break; // Wait for more bytes
@@ -143,10 +140,23 @@ class TelnetTransport {
   void _startDecompression() {
     _isDecompressing = true;
     _decompressorSink = zlib.decoder.startChunkedConversion(
-      ByteConversionSink.withCallback((decompressed) {
-        _processBytes(decompressed);
+      _DecompressionSink((decompressed) {
+        _processBytes(decompressed, fromDecompressor: true);
       }),
     );
   }
 
+}
+
+class _DecompressionSink implements Sink<List<int>> {
+  final void Function(List<int>) onData;
+  _DecompressionSink(this.onData);
+
+  @override
+  void add(List<int> chunk) {
+    onData(chunk);
+  }
+
+  @override
+  void close() {}
 }
