@@ -18,8 +18,6 @@ This file tracks the implementation of the Telnet Sentinel core features.
 - [x] **Task 6.1: MCCP (Zlib Compression)**
 - [x] **Task 6.2: GMCP/MSDP (Out-of-band Data)**
 
-## Phase 7: UI & Reporting Enhancements (PLANNED)
-- [ ] **Task 7.1: JSON Output**
-    - [ ] Implement `--json` flag for machine-readable reports
-- [ ] **Task 7.2: Traffic Visualizer**
-    - [ ] Implement a live traffic view showing IAC handshakes in real-time
+## Phase 7: UI & Reporting Enhancements (COMPLETE)
+- [x] **Task 7.1: JSON Output**
+- [x] **Task 7.2: Traffic Visualizer**
