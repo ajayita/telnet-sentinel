@@ -107,42 +107,39 @@ Future<void> main(List<String> arguments) async {
       NegotiationLoopProbe(),
     ];
 
-    RawSocket socket;
-    try {
-      socket = await RawSocket.connect(host, port, timeout: const Duration(seconds: 5));
-    } catch (e) {
-      if (!outputJson) {
-        print('Error: Could not connect to $host:$port - $e');
-      }
-      exit(1);
-    }
-
-    final transport = TelnetTransport(socket);
-
-    if (sniffer && !outputJson) {
-      transport.events.listen((event) {
-        if (event.type == TelnetEventType.iac) {
-          final description = _describeIac(event.bytes);
-          print('\x1B[36m[IAC] $description\x1B[0m'); // Cyan for IAC
-        } else {
-          final data = utf8.decode(event.bytes, allowMalformed: true);
-          final escapedData = data.replaceAll('\r', '\\r').replaceAll('\n', '\\n');
-          print('\x1B[32m[DATA] $escapedData\x1B[0m'); // Green for DATA
-        }
-      });
-    }
-
-    final probe = HandshakeProbe();
     final auditResults = <AuditResult>[];
 
-    try {
-      if (verbose && !outputJson) {
-        print('[VERBOSE] Running HandshakeProbe...');
+    for (final probe in probes) {
+      if (!outputJson && verbose) {
+        print('[VERBOSE] Running ${probe.name}...');
       }
-      final result = await probe.run(transport);
-      auditResults.add(result);
-    } finally {
-      await transport.close();
+
+      RawSocket? socket;
+      try {
+        socket = await RawSocket.connect(host, port, timeout: const Duration(seconds: 5));
+        final transport = TelnetTransport(socket);
+
+        if (sniffer && !outputJson) {
+          transport.events.listen((event) {
+            if (event.type == TelnetEventType.iac) {
+              final description = _describeIac(event.bytes);
+              print('\x1B[36m[IAC] $description\x1B[0m'); // Cyan for IAC
+            } else {
+              final data = utf8.decode(event.bytes, allowMalformed: true);
+              final escapedData = data.replaceAll('\r', '\\r').replaceAll('\n', '\\n');
+              print('\x1B[32m[DATA] $escapedData\x1B[0m'); // Green for DATA
+            }
+          });
+        }
+
+        final result = await probe.run(transport);
+        auditResults.add(result);
+
+        await transport.close();
+      } catch (e) {
+        auditResults.add(AuditResult(probe.name, AuditStatus.fail, 'Connection/Execution error: $e'));
+        socket?.close();
+      }
     }
 
     final report = AuditReport('$host:$port', auditResults);
