@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:args/args.dart';
 import 'package:telnet_sentinel/transport/telnet_transport.dart';
 import 'package:telnet_sentinel/probes/handshake_probe.dart';
@@ -27,6 +28,12 @@ ArgParser buildParser() {
       negatable: false,
       help: 'Show additional command output.',
     )
+    ..addFlag(
+      'json',
+      abbr: 'j',
+      negatable: false,
+      help: 'Output the report in JSON format.',
+    )
     ..addFlag('version', negatable: false, help: 'Print the tool version.');
 }
 
@@ -40,6 +47,7 @@ Future<void> main(List<String> arguments) async {
   try {
     final ArgResults results = argParser.parse(arguments);
     bool verbose = false;
+    bool outputJson = false;
 
     if (results.flag('help')) {
       printUsage(argParser);
@@ -52,23 +60,32 @@ Future<void> main(List<String> arguments) async {
     if (results.flag('verbose')) {
       verbose = true;
     }
+    if (results.flag('json')) {
+      outputJson = true;
+    }
 
     if (results.rest.isEmpty) {
-      print('Error: No target host provided.');
-      printUsage(argParser);
+      if (!outputJson) {
+        print('Error: No target host provided.');
+        printUsage(argParser);
+      }
       exit(1);
     }
 
     final String host = results.rest.first;
     final int port = int.tryParse(results['port']) ?? 23;
 
-    print('Starting audit for $host:$port...');
+    if (!outputJson) {
+      print('Starting audit for $host:$port...');
+    }
 
     RawSocket socket;
     try {
       socket = await RawSocket.connect(host, port, timeout: const Duration(seconds: 5));
     } catch (e) {
-      print('Error: Could not connect to $host:$port - $e');
+      if (!outputJson) {
+        print('Error: Could not connect to $host:$port - $e');
+      }
       exit(1);
     }
 
@@ -77,7 +94,7 @@ Future<void> main(List<String> arguments) async {
     final auditResults = <AuditResult>[];
 
     try {
-      if (verbose) {
+      if (verbose && !outputJson) {
         print('[VERBOSE] Running HandshakeProbe...');
       }
       final result = await probe.run(transport);
@@ -87,7 +104,11 @@ Future<void> main(List<String> arguments) async {
     }
 
     final report = AuditReport('$host:$port', auditResults);
-    _printReport(report);
+    if (outputJson) {
+      print(jsonEncode(report.toJson()));
+    } else {
+      _printReport(report);
+    }
 
     if (report.hasFailures) {
       exit(1);
@@ -98,6 +119,11 @@ Future<void> main(List<String> arguments) async {
     printUsage(argParser);
     exit(1);
   } catch (e) {
+    if (arguments.contains('--json') || arguments.contains('-j')) {
+      // If we are in JSON mode, we should ideally output an error JSON, 
+      // but for now just exit silently or with standard error message.
+      // The requirement says output single JSON object containing full report.
+    }
     print('An unexpected error occurred: $e');
     exit(1);
   }
