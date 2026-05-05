@@ -6,7 +6,7 @@ import 'package:telnet_sentinel/models/telnet_event.dart';
 
 class TelnetTransport {
   final RawSocket _socket;
-  final StreamController<TelnetEvent> _controller = StreamController<TelnetEvent>();
+  final StreamController<TelnetEvent> _controller = StreamController<TelnetEvent>.broadcast();
   final List<int> _pendingBytes = [];
   
   bool _isDecompressing = false;
