@@ -14,11 +14,9 @@ This file tracks the implementation of the Telnet Sentinel core features.
 - [x] **Task 5.3: Core Protocol Probes**
 - [x] **Task 5.4: Stress & Adversarial Testing**
 
-## Phase 6: MUD Extensions (IN PROGRESS)
+## Phase 6: MUD Extensions (COMPLETE)
 - [x] **Task 6.1: MCCP (Zlib Compression)**
-- [ ] **Task 6.2: GMCP/MSDP (Out-of-band Data)**
-    - [ ] Implement JSON parser for GMCP
-    - [ ] Implement `GmcpProbe` to verify structured data leakage
+- [x] **Task 6.2: GMCP/MSDP (Out-of-band Data)**
 
 ## Phase 7: UI & Reporting Enhancements (PLANNED)
 - [ ] **Task 7.1: JSON Output**
