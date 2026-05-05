@@ -1,64 +1,114 @@
-# Core Telnet Implementation Plan (RFC 854 Exhaustion)
+# Exhaustive Core Telnet Audit Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Achieve exhaustive coverage of the core Telnet protocol (RFC 854) and common core extensions (RFC 856, 857).
+**Goal:** Update the CLI to run all available Telnet probes sequentially against a target host.
 
-**Architecture:** Extend the existing `NegotiationStateManager` and `TelnetTransport` to handle 2-byte and 3-byte core commands, and implement specialized probes for each feature.
+**Architecture:** The CLI will maintain a list of `Probe` instances. For each probe, it will establish a fresh `RawSocket` connection, wrap it in a `TelnetTransport`, run the probe, collect the result, and close the connection.
 
-**Tech Stack:** Dart, `dart:io`.
+**Tech Stack:** Dart, `args` package.
 
 ---
 
-### Task 5.1: Core Command Handling (AYT, AO, IP, BRK, EL, EC, NOP)
+### Task 1: Update CLI Imports and Probe Registry
 
 **Files:**
-- Modify: `lib/transport/telnet_transport.dart`
-- Modify: `lib/state/negotiation_state_manager.dart`
-- Create: `lib/probes/ayt_probe.dart`
+- Modify: `bin/telnet_sentinel.dart`
 
-- [ ] **Step 1: Update TelnetTransport to emit 2-byte commands cleanly**
-Ensure commands like AYT (246), AO (245), etc., are emitted as `TelnetEvent`s.
+- [ ] **Step 1: Add imports for all probes**
 
-- [ ] **Step 2: Implement AYT response in NegotiationStateManager**
-When receiving `AYT`, send a [NOP] or a specific string response as defined by the user (defaulting to a safe NOP).
+```dart
+import 'package:telnet_sentinel/probes/ayt_probe.dart';
+import 'package:telnet_sentinel/probes/binary_mode_probe.dart';
+import 'package:telnet_sentinel/probes/gmcp_probe.dart';
+import 'package:telnet_sentinel/probes/malformed_iac_probe.dart';
+import 'package:telnet_sentinel/probes/mccp_probe.dart';
+import 'package:telnet_sentinel/probes/negotiation_loop_probe.dart';
+import 'package:telnet_sentinel/probes/probe_interface.dart';
+```
 
-- [ ] **Step 3: Implement AytProbe**
-Sends `AYT` and waits for any response from the server.
+- [ ] **Step 2: Define the list of probes**
 
-- [ ] **Step 4: Commit**
-`git add . && git commit -m "feat: implement AYT command handling and probe"`
-
-### Task 5.2: Advanced Sub-negotiation (SB/SE) & Binary Mode
-
-**Files:**
-- Modify: `lib/transport/telnet_transport.dart`
-- Modify: `lib/state/negotiation_state_manager.dart`
-- Create: `lib/probes/binary_mode_probe.dart`
-
-- [ ] **Step 1: Enhance SB parsing in TelnetTransport**
-Ensure SB data correctly handles escaped IACs (`0xFF 0xFF`) within the sub-negotiation block.
-
-- [ ] **Step 2: Implement Binary Mode (RFC 856) state in NegotiationStateManager**
-Track binary mode state to ensure we don't accidentally decode 8-bit data as UTF-8.
-
-- [ ] **Step 3: Implement BinaryModeProbe**
-Request `DO BINARY` and verify the server's acknowledgment.
-
-- [ ] **Step 4: Commit**
-`git add . && git commit -m "feat: implement advanced SB parsing and binary mode probe"`
-
-### Task 5.3: Stress & Adversarial Probes
-
-**Files:**
-- Create: `lib/probes/malformed_iac_probe.dart`
-- Create: `lib/probes/negotiation_loop_probe.dart`
-
-- [ ] **Step 1: Implement MalformedIacProbe**
-Send invalid Telnet sequences (e.g., `IAC` followed by an undefined command, or an unclosed `SB`) and verify the connection remains stable.
-
-- [ ] **Step 2: Implement NegotiationLoopProbe**
-Attempt to trigger a negotiation loop by repeatedly sending a toggle request and verify the `NegotiationStateManager` prevents the loop.
+Inside `main` or as a helper function:
+```dart
+final probes = <Probe>[
+  HandshakeProbe(),
+  AytProbe(),
+  BinaryModeProbe(),
+  GmcpProbe(),
+  MccpProbe(),
+  MalformedIacProbe(),
+  NegotiationLoopProbe(),
+];
+```
 
 - [ ] **Step 3: Commit**
-`git add . && git commit -m "feat: add adversarial probes for protocol stability"`
+
+```bash
+git add bin/telnet_sentinel.dart
+git commit -m "cli: import all probes and define probe list"
+```
+
+### Task 2: Refactor Connection and Probe Execution Loop
+
+**Files:**
+- Modify: `bin/telnet_sentinel.dart`
+
+- [ ] **Step 1: Replace single probe execution with a loop**
+
+Modify the logic after target host/port parsing:
+
+```dart
+    final auditResults = <AuditResult>[];
+
+    for (final probe in probes) {
+      if (!outputJson && verbose) {
+        print('[VERBOSE] Running ${probe.name}...');
+      }
+
+      RawSocket? socket;
+      try {
+        socket = await RawSocket.connect(host, port, timeout: const Duration(seconds: 5));
+        final transport = TelnetTransport(socket);
+        
+        final result = await probe.run(transport);
+        auditResults.add(result);
+        
+        await transport.close();
+      } catch (e) {
+        auditResults.add(AuditResult(probe.name, AuditStatus.fail, 'Connection/Execution error: $e'));
+        socket?.close();
+      }
+    }
+```
+
+- [ ] **Step 2: Verify the loop logic**
+
+Ensure the existing `HandshakeProbe` logic is removed and replaced by this generic loop.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add bin/telnet_sentinel.dart
+git commit -m "cli: implement sequential probe execution loop with fresh connections"
+```
+
+### Task 3: Final Verification against Live Server
+
+**Files:**
+- N/A (Execution and Verification)
+
+- [ ] **Step 1: Run the updated CLI against 127.0.0.1:2323**
+
+Run: `dart bin/telnet_sentinel.dart 127.0.0.1 -p 2323`
+Expected: A report showing 7 probes (Handshake, AYT, Binary Mode, GMCP, MCCP, Malformed IAC, Negotiation Loop).
+
+- [ ] **Step 2: Verify JSON output**
+
+Run: `dart bin/telnet_sentinel.dart 127.0.0.1 -p 2323 --json`
+Expected: A valid JSON object containing an array of 7 audit results.
+
+- [ ] **Step 3: Verify Verbose output**
+
+Run: `dart bin/telnet_sentinel.dart 127.0.0.1 -p 2323 -v`
+Expected: Output includes "[VERBOSE] Running ..." lines for each probe.

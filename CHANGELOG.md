@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Testing Infrastructure**:
+    - Built a YAML fixture-based conformance suite for robust library self-tests.
+    - Added `TranscriptRunner` for executing byte-level fixtures over real loopback sockets against mock targets.
+    - Added `FixtureParser` to deserialize protocol fixtures and expected events.
+    - Created deliberately broken mock servers (`BrokenIacServer`) for test framework mutation testing.
 - **MUD Extensions**:
     - Added support for **MCCP2** (Zlib compression) decompression and auditing.
     - Added support for **GMCP** (Generic MUD Communication Protocol) parsing and auditing.

@@ -2,6 +2,15 @@
 
 This page explains the testing strategy and commands for `telnet-sentinel`.
 
+## Important Testing Distinction
+
+There are two different kinds of tests involved in this project:
+
+1. **Library self-tests**: These test the correctness of this repository’s own code (parsers, byte fixtures, transcript runners, assertion helpers, fake clients, state machines, etc.).
+2. **Protocol conformance tests**: These are the tests that this library exposes to users so they can validate an external Telnet/MUD server implementation.
+
+When adding or improving self-tests, we use a **Fixture-Based Conformance Suite**. This suite uses YAML fixtures (in `test/golden/`) run via `TranscriptRunner` against mock targets (in `test/fake_servers/`). This ensures the library correctly detects valid and invalid protocol behavior (mutation testing).
+
 ## Strategy
 
 - **Unit Tests**: Test individual state transitions and byte-parsing logic.
