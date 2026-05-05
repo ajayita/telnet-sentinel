@@ -20,24 +20,23 @@ The application is structured as a **Library-First** implementation, ensuring th
 
 ### Core Components
 
-1.  **Low-Level Transport (`RawSocket`)**: Bypasses standard buffering to provide byte-level interception of `IAC` sequences. (See [ADR-0002](../adr/0002-use-rawsocket-for-byte-level-protocol-control.md))
-2.  **Negotiation State Manager**: A centralized state machine that handles the `WILL/WONT/DO/DONT` handshake. It prevents negotiation loops and tracks state transitions for auditing.
-3.  **Probe Interface (Plugin Architecture)**: A sandbox-based framework for RFC-specific modules (e.g., Window Size, Binary Mode). Each probe can inject sequences and monitor responses in isolation.
-4.  **MUD Extension Modules**: Specialized probes for advanced features like **MCCP** (Zlib compression) and **GMCP** (JSON out-of-band data).
+1.  **Low-Level Transport (`RawSocket`)**: Bypasses standard buffering to provide byte-level interception of `IAC` sequences. Includes a real-time Zlib decompression layer for MCCP2. (See [ADR-0002](../adr/0002-use-rawsocket-for-byte-level-protocol-control.md))
+2.  **Negotiation State Manager**: A centralized state machine that handles the `WILL/WONT/DO/DONT` handshake using the **RFC 1143 Q-method**. It prevents negotiation loops and tracks state transitions for auditing.
+3.  **Probe Interface (Plugin Architecture)**: A sandbox-based framework for RFC-specific modules. Each probe can inject sequences and monitor responses in isolation.
+4.  **MUD Extension Modules**: Specialized probes for advanced features like **MCCP2** (Zlib compression) and **GMCP** (JSON out-of-band data).
+5.  **Reporting Engine**: Aggregates `AuditResult` objects into an `AuditReport`, which can be rendered as a human-readable scorecard or serialized to JSON.
 
-## The State-Machine Framework
+## The "Active Prober" Model
 
-Telnet negotiation is inherently stateful. The Sentinel architecture ensures:
-- **Loop Prevention**: Detecting and breaking recursive negotiation cycles.
-- **Adversarial Testing**: Programmatically simulating non-compliant behavior to test server fallbacks.
-- **Traceability**: Detailed logging of every handshake transition for post-audit analysis.
+The application functions by simulating a wide variety of user environments and "stressful" scenarios. Instead of a passive connection, it uses a series of **Probes**:
 
-## Plugin-Based Probing
+1.  **The Handshake Audit**: Negotiates features like window sizing, terminal type, and color support.
+2.  **The Stress Test**: Sends unexpected, malformed, or looping commands to test server stability and compliance.
+3.  **The Extension Validator**: Verifies MUD-specific features like data compression and structured out-of-band data.
 
-Rather than a monolithic test suite, Telnet Sentinel uses a plugin architecture. Each **Probe** is responsible for:
-- **Injection**: Sending specific byte sequences to the server.
-- **Monitoring**: Observing the `RawSocket` for expected (or malformed) responses.
-- **Validation**: Comparing server behavior against RFC standards.
+## Traffic Visualization
+
+The built-in **Sniffer** provides a real-time, color-coded view of the Telnet stream. It decodes `IAC` sequences on the fly, allowing developers to see exactly what is happening during the audit phase.
 
 ## Data Flow
 

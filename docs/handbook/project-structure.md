@@ -7,27 +7,34 @@ This page describes the repository layout and the responsibilities of major fold
 ```text
 /
 ├── AGENTS.md             # Root instructions for AI assistants.
-├── README.md             # Public entry point.
-├── CHANGELOG.md          # Record of changes.
+├── README.md             # Public entry point and project overview.
+├── CHANGELOG.md          # Record of changes and milestones.
+├── TODO.md               # Tracking of implementation progress (Phase 1-7 COMPLETE).
 ├── pubspec.yaml          # Project metadata and dependencies.
 ├── bin/                  # Application entry points.
-│   └── telnet_sentinel.dart
-├── docs/                 # Project documentation.
+│   ├── telnet_sentinel.dart # Main CLI wrapper.
+│   └── AGENTS.md         # CLI-specific agent instructions.
+├── docs/                 # Project documentation hub.
 │   ├── handbook/         # Authoritative developer handbook.
 │   ├── adr/              # Architecture Decision Records.
-│   └── working-notes/    # Temporary/exploratory notes.
-├── lib/                  # [TODO: Core library logic, once extracted from bin].
-└── test/                 # Test suite.
+│   ├── working-notes/    # Exploratory and planning notes.
+│   └── superpowers/      # Detailed implementation plans.
+├── lib/                  # Core framework library.
+│   ├── models/           # Data models for events, results, and reports.
+│   ├── probes/           # Active auditing probes and interfaces.
+│   ├── state/            # Negotiation state machine logic.
+│   └── transport/        # Low-level socket and protocol parsing.
+└── test/                 # Comprehensive test suite (Unit and Integration).
 ```
 
 ## Folder Responsibilities
 
 ### `lib/`
-The core of the framework.
-- `lib/transport/`: `RawSocket` management and byte-level stream handling.
-- `lib/state/`: The Negotiation State Manager and Telnet state machine logic.
-- `lib/probes/`: The Probe Interface and RFC-specific implementations.
-- `lib/models/`: Data models for audit reports and protocol states.
+The core framework, designed with a library-first approach.
+- `lib/transport/`: Manages `RawSocket` events and parses the byte stream into `TelnetEvent` objects. Includes specialized parsers for GMCP.
+- `lib/state/`: Implements the Telnet negotiation state machine (RFC 1143).
+- `lib/probes/`: Contains the `Probe` interface and implementations for various audits (Handshake, MCCP, GMCP, etc.).
+- `lib/models/`: Defines the data structures used throughout the application.
 
 ### `bin/`
 Contains the CLI wrapper for the library. It is responsible for orchestrating audits in CI/CD environments and returning appropriate exit codes.

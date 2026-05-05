@@ -10,13 +10,17 @@ This page documents security rules and operational cautions for `telnet-sentinel
 
 ## Sensitive Files
 
-- `pubspec.yaml`: Contains dependency information; ensure dependencies are from trusted sources.
-- [TODO: List other sensitive files as they are introduced.]
+- `pubspec.yaml`: Contains dependency information. The project currently only depends on standard Dart libraries (`args`, `test`).
+- `test/`: Contains the "adversarial payloads" used for probing; these should be handled with care when auditing production systems.
 
 ## Data Safety
 
-- [TODO: Document how sensitive data is handled, stored, or transmitted.]
+- **Local Execution**: The application processes all Telnet traffic locally and does not transmit data to external third-party services.
+- **Protocol Integrity**: Telnet Sentinel does not store user credentials or passwords. It focus solely on protocol-level auditing.
+- **Adversarial Safety**: While adversarial probes are designed to test server stability, they should be used with caution against mission-critical hardware, as malformed Telnet sequences can trigger bugs in poorly implemented firmware.
 
 ## Security Audits
 
-Periodic security scans can be performed using relevant tools for the Dart ecosystem.
+The framework includes built-in security probes:
+- **`MalformedIacProbe`**: Tests for server-side vulnerabilities to unclosed or invalid IAC sequences.
+- **`NegotiationLoopProbe`**: Audits for resource exhaustion through recursive protocol negotiations.
