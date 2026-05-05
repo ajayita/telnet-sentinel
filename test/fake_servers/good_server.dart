@@ -12,12 +12,11 @@ class GoodServer {
         if (event == RawSocketEvent.read) {
           final data = client.read();
           if (data != null) {
-            // Very simple echo for now, but properly escapes IACs
-            final response = <int>[];
-            for (var b in data) {
-              response.add(b);
+            if (data.length == 1 && data[0] == 101) {
+              client.write([255, 255]); // proper escaped IAC
+            } else {
+              client.write(data);
             }
-            client.write(response);
           }
         }
       });

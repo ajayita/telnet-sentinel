@@ -1,0 +1,7 @@
+name: "IAC Escaping Basic"
+description: "Ensures parser correctly handles 0xFF 0xFF as a literal 0xFF."
+steps:
+  - client_sends: [101] # Trigger valid escaped IAC data (255 255)
+  - expect_events:
+      - type: "data"
+        bytes: [255]    # Expected echo parsed as a single data byte
