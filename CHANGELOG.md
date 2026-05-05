@@ -9,7 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **MUD Extensions**:
+    - Added support for **MCCP2** (Zlib compression) decompression and auditing.
+    - Added support for **GMCP** (Generic MUD Communication Protocol) parsing and auditing.
+- **Exhaustive Core Telnet**:
+    - Implemented full RFC 854 command handling (AYT, AO, IP, BRK, EL, EC).
+    - Added **Binary Mode** support (RFC 856).
+    - Added **Adversarial Probes** for malformed IAC sequences and negotiation loops.
+- **UI & Reporting**:
+    - Added **Sniffer Mode** (`--sniffer`) for real-time traffic visualization.
+    - Added **JSON Output** (`--json`) for machine-readable reports.
+- **Core Framework**:
+    - Implemented `TelnetTransport` using `RawSocket` for byte-level control.
+    - Implemented `NegotiationStateManager` with RFC 1143 Q-method loop prevention.
+    - Established a plugin-based `Probe` architecture.
 - **Engineering Design Integration**: Formalized the core architecture based on the Engineering Design Document.
+
     - Added **ADR-0002**: Standardized on `RawSocket` for byte-level protocol control.
     - Defined the **State-Machine Framework** for negotiation management.
     - Implemented a **Plugin-Based Probing Architecture** for RFC-specific modules.

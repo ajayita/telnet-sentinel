@@ -15,7 +15,15 @@ The primary objective of this tool is **Active Integrity Verification**. Unlike 
 ## Project Status
 
 - **Version**: 0.0.1
-- **Status**: Scaffolding complete.
+- **Status**: Core "Active Prober" framework complete.
+
+## Key Features
+
+- **Active Protocol Auditing**: Exhaustive RFC 854 compliance checks.
+- **Adversarial Probing**: Tests for malformed IAC sequences and negotiation loops.
+- **MUD Extensions**: Full support for **MCCP2** (Zlib compression) and **GMCP** (JSON out-of-band data).
+- **Traffic Visualizer**: Real-time sniffer mode for debugging Telnet handshakes.
+- **Machine-Readable Reports**: Native JSON output for CI/CD integration.
 
 ## Installation
 
@@ -25,8 +33,19 @@ dart pub get
 
 ## Usage
 
+Run an audit against a target:
 ```bash
-dart run bin/telnet_sentinel.dart --help
+dart run bin/telnet_sentinel.dart <host> [port]
+```
+
+Run in **Sniffer Mode** to see live traffic:
+```bash
+dart run bin/telnet_sentinel.dart <host> --sniffer
+```
+
+Export results as **JSON**:
+```bash
+dart run bin/telnet_sentinel.dart <host> --json
 ```
 
 ## Documentation
