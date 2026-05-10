@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Added probe scenario self-tests with dedicated loopback `RawSocket` targets for AYT, handshake, GMCP, negotiation-loop, and malformed-IAC probe behavior.
+- Added ADR-0003 to record that probe scenario tests complement, but do not replace, fixture-based transcript conformance tests.
+
+### Changed
+
+- Restored `origin/main` as the canonical baseline while preserving the divergent local self-test redesign on `backup/local-self-test-redesign`.
+- Updated the testing handbook to distinguish fixture-based transcript tests from full probe scenario tests.
+
 ## [0.0.1]
 
 ### Added
