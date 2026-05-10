@@ -1,11 +1,6 @@
 import 'dart:typed_data';
 
-enum OptionState {
-  no,
-  wantYes,
-  yes,
-  wantNo,
-}
+enum OptionState { no, wantYes, yes, wantNo }
 
 class NegotiationStateManager {
   static const int iac = 255;
@@ -160,7 +155,7 @@ class NegotiationStateManager {
   void handleCommand(List<int> bytes) {
     if (bytes.length < 2 || bytes[0] != iac) return;
     int command = bytes[1];
-    
+
     if (command >= 251 && command <= 254) {
       if (bytes.length < 3) return;
       int option = bytes[2];

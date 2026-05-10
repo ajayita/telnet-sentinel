@@ -18,20 +18,41 @@ class AytProbe implements Probe {
       onSend: (bytes) => transport.write(bytes),
     );
 
-    final subscription = transport.events.listen((event) {
-      if (!completer.isCompleted) {
-        if (event.type == TelnetEventType.iac) {
-          stateManager.handleCommand(event.bytes);
-          completer.complete(AuditResult(name, AuditStatus.pass, 'Server responded to AYT with a Telnet command: ${event.bytes}'));
-        } else if (event.type == TelnetEventType.data) {
-          completer.complete(AuditResult(name, AuditStatus.pass, 'Server responded to AYT with data.'));
+    final subscription = transport.events.listen(
+      (event) {
+        if (!completer.isCompleted) {
+          if (event.type == TelnetEventType.iac) {
+            stateManager.handleCommand(event.bytes);
+            completer.complete(
+              AuditResult(
+                name,
+                AuditStatus.pass,
+                'Server responded to AYT with a Telnet command: ${event.bytes}',
+              ),
+            );
+          } else if (event.type == TelnetEventType.data) {
+            completer.complete(
+              AuditResult(
+                name,
+                AuditStatus.pass,
+                'Server responded to AYT with data.',
+              ),
+            );
+          }
         }
-      }
-    }, onError: (error) {
-      if (!completer.isCompleted) {
-        completer.complete(AuditResult(name, AuditStatus.fail, 'Error during AYT probe: $error'));
-      }
-    });
+      },
+      onError: (error) {
+        if (!completer.isCompleted) {
+          completer.complete(
+            AuditResult(
+              name,
+              AuditStatus.fail,
+              'Error during AYT probe: $error',
+            ),
+          );
+        }
+      },
+    );
 
     try {
       // Send IAC AYT (255, 246)
@@ -40,14 +61,26 @@ class AytProbe implements Probe {
       return await completer.future.timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          return AuditResult(name, AuditStatus.fail, 'Timeout waiting for AYT response.');
+          return AuditResult(
+            name,
+            AuditStatus.fail,
+            'Timeout waiting for AYT response.',
+          );
         },
       );
     } catch (e) {
       if (e is TimeoutException) {
-        return AuditResult(name, AuditStatus.fail, 'Timeout waiting for AYT response.');
+        return AuditResult(
+          name,
+          AuditStatus.fail,
+          'Timeout waiting for AYT response.',
+        );
       }
-      return AuditResult(name, AuditStatus.fail, 'Exception during AYT probe: $e');
+      return AuditResult(
+        name,
+        AuditStatus.fail,
+        'Exception during AYT probe: $e',
+      );
     } finally {
       await subscription.cancel();
     }

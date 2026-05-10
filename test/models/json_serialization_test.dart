@@ -25,7 +25,12 @@ void main() {
     test('toJson() returns correct map', () {
       final results = [
         AuditResult('Probe 1', AuditStatus.pass, 'OK'),
-        AuditResult('Probe 2', AuditStatus.fail, 'Failed', metadata: {'error': 'timeout'}),
+        AuditResult(
+          'Probe 2',
+          AuditStatus.fail,
+          'Failed',
+          metadata: {'error': 'timeout'},
+        ),
       ];
       final report = AuditReport('localhost:23', results);
 

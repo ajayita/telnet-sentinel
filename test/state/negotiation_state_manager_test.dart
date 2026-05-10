@@ -38,64 +38,79 @@ void main() {
       expect(sentBytes, isEmpty);
     });
 
-    test('local request to DO BINARY should send DO BINARY and update state to WANT_YES', () {
-      const binaryOption = 0;
-      const doCmd = 253;
-      const iac = 255;
+    test(
+      'local request to DO BINARY should send DO BINARY and update state to WANT_YES',
+      () {
+        const binaryOption = 0;
+        const doCmd = 253;
+        const iac = 255;
 
-      manager.requestDo(binaryOption);
+        manager.requestDo(binaryOption);
 
-      expect(sentBytes, equals([iac, doCmd, binaryOption]));
-      // We can't directly check state unless we expose it or use another method.
-      // But we can verify what happens when we receive WILL BINARY.
-    });
+        expect(sentBytes, equals([iac, doCmd, binaryOption]));
+        // We can't directly check state unless we expose it or use another method.
+        // But we can verify what happens when we receive WILL BINARY.
+      },
+    );
 
-    test('receiving WILL BINARY after local DO should update state to YES and send nothing', () {
-      const binaryOption = 0;
+    test(
+      'receiving WILL BINARY after local DO should update state to YES and send nothing',
+      () {
+        const binaryOption = 0;
 
-      manager.requestDo(binaryOption);
-      sentBytes.clear();
+        manager.requestDo(binaryOption);
+        sentBytes.clear();
 
-      manager.handleWill(binaryOption);
+        manager.handleWill(binaryOption);
 
-      expect(sentBytes, isEmpty);
-      
-      // If we receive another WILL, it should still do nothing.
-      manager.handleWill(binaryOption);
-      expect(sentBytes, isEmpty);
-    });
+        expect(sentBytes, isEmpty);
 
-    test('receiving WONT BINARY should update state to NO and send nothing if already NO', () {
-      const binaryOption = 0;
-      manager.handleWont(binaryOption);
-      expect(sentBytes, isEmpty);
-    });
+        // If we receive another WILL, it should still do nothing.
+        manager.handleWill(binaryOption);
+        expect(sentBytes, isEmpty);
+      },
+    );
 
-    test('receiving WONT BINARY when state is YES should send DONT BINARY and update state to NO', () {
-      const binaryOption = 0;
-      const iac = 255;
-      const dontCmd = 254;
+    test(
+      'receiving WONT BINARY should update state to NO and send nothing if already NO',
+      () {
+        const binaryOption = 0;
+        manager.handleWont(binaryOption);
+        expect(sentBytes, isEmpty);
+      },
+    );
 
-      // Force state to YES
-      manager.handleWill(binaryOption);
-      sentBytes.clear();
+    test(
+      'receiving WONT BINARY when state is YES should send DONT BINARY and update state to NO',
+      () {
+        const binaryOption = 0;
+        const iac = 255;
+        const dontCmd = 254;
 
-      manager.handleWont(binaryOption);
-      expect(sentBytes, equals([iac, dontCmd, binaryOption]));
-    });
+        // Force state to YES
+        manager.handleWill(binaryOption);
+        sentBytes.clear();
 
-    test('receiving DONT ECHO when state is YES should send WONT ECHO and update state to NO', () {
-      const echoOption = 1;
-      const iac = 255;
-      const wontCmd = 252;
+        manager.handleWont(binaryOption);
+        expect(sentBytes, equals([iac, dontCmd, binaryOption]));
+      },
+    );
 
-      // Force state to YES
-      manager.handleDo(echoOption);
-      sentBytes.clear();
+    test(
+      'receiving DONT ECHO when state is YES should send WONT ECHO and update state to NO',
+      () {
+        const echoOption = 1;
+        const iac = 255;
+        const wontCmd = 252;
 
-      manager.handleDont(echoOption);
-      expect(sentBytes, equals([iac, wontCmd, echoOption]));
-    });
+        // Force state to YES
+        manager.handleDo(echoOption);
+        sentBytes.clear();
+
+        manager.handleDont(echoOption);
+        expect(sentBytes, equals([iac, wontCmd, echoOption]));
+      },
+    );
 
     test('requesting WILL should send WILL and update state to WANT_YES', () {
       const option = 3; // Suppress Go Ahead
@@ -103,40 +118,52 @@ void main() {
       expect(sentBytes, equals([255, 251, 3]));
     });
 
-    test('receiving DO after local WILL should update state to YES and send nothing', () {
-      const option = 3;
-      manager.requestWill(option);
-      sentBytes.clear();
-      manager.handleDo(option);
-      expect(sentBytes, isEmpty);
-    });
+    test(
+      'receiving DO after local WILL should update state to YES and send nothing',
+      () {
+        const option = 3;
+        manager.requestWill(option);
+        sentBytes.clear();
+        manager.handleDo(option);
+        expect(sentBytes, isEmpty);
+      },
+    );
 
-    test('receiving DONT after local WILL should update state to NO and send nothing', () {
-      const option = 3;
-      manager.requestWill(option);
-      sentBytes.clear();
-      manager.handleDont(option);
-      expect(sentBytes, isEmpty);
-    });
+    test(
+      'receiving DONT after local WILL should update state to NO and send nothing',
+      () {
+        const option = 3;
+        manager.requestWill(option);
+        sentBytes.clear();
+        manager.handleDont(option);
+        expect(sentBytes, isEmpty);
+      },
+    );
 
-    test('requesting WONT when state is YES should send WONT and update state to WANT_NO', () {
-      const option = 3;
-      manager.handleDo(option); // Become YES
-      sentBytes.clear();
-      
-      manager.requestWont(option);
-      expect(sentBytes, equals([255, 252, 3]));
-    });
+    test(
+      'requesting WONT when state is YES should send WONT and update state to WANT_NO',
+      () {
+        const option = 3;
+        manager.handleDo(option); // Become YES
+        sentBytes.clear();
 
-    test('receiving DONT after local WONT should update state to NO and send nothing', () {
-      const option = 3;
-      manager.handleDo(option);
-      manager.requestWont(option);
-      sentBytes.clear();
-      
-      manager.handleDont(option);
-      expect(sentBytes, isEmpty);
-    });
+        manager.requestWont(option);
+        expect(sentBytes, equals([255, 252, 3]));
+      },
+    );
+
+    test(
+      'receiving DONT after local WONT should update state to NO and send nothing',
+      () {
+        const option = 3;
+        manager.handleDo(option);
+        manager.requestWont(option);
+        sentBytes.clear();
+
+        manager.handleDont(option);
+        expect(sentBytes, isEmpty);
+      },
+    );
 
     test('receiving AYT should send NOP', () {
       manager.handleCommand([255, 246]); // IAC AYT

@@ -8,11 +8,11 @@ class GmcpParser {
   static GmcpEvent? parse(List<int> bytes) {
     // Basic validation: IAC SB 201 ... IAC SE
     // Minimum length: IAC SB 201 (3) + "A.B" (3) + IAC SE (2) = 8
-    if (bytes.length < 5 || 
-        bytes[0] != 255 || 
-        bytes[1] != 250 || 
-        bytes[2] != 201 || 
-        bytes[bytes.length - 2] != 255 || 
+    if (bytes.length < 5 ||
+        bytes[0] != 255 ||
+        bytes[1] != 250 ||
+        bytes[2] != 201 ||
+        bytes[bytes.length - 2] != 255 ||
         bytes[bytes.length - 1] != 240) {
       return null;
     }
@@ -26,7 +26,7 @@ class GmcpParser {
 
     // GMCP format: Package.Message [JSON]
     // Example: Core.Welcome {"version": "1.0"}
-    
+
     String packageMessage;
     Map<String, dynamic> data = {};
 

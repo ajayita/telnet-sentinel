@@ -116,7 +116,11 @@ Future<void> main(List<String> arguments) async {
 
       RawSocket? socket;
       try {
-        socket = await RawSocket.connect(host, port, timeout: const Duration(seconds: 5));
+        socket = await RawSocket.connect(
+          host,
+          port,
+          timeout: const Duration(seconds: 5),
+        );
         final transport = TelnetTransport(socket);
 
         if (sniffer && !outputJson) {
@@ -126,7 +130,9 @@ Future<void> main(List<String> arguments) async {
               print('\x1B[36m[IAC] $description\x1B[0m'); // Cyan for IAC
             } else {
               final data = utf8.decode(event.bytes, allowMalformed: true);
-              final escapedData = data.replaceAll('\r', '\\r').replaceAll('\n', '\\n');
+              final escapedData = data
+                  .replaceAll('\r', '\\r')
+                  .replaceAll('\n', '\\n');
               print('\x1B[32m[DATA] $escapedData\x1B[0m'); // Green for DATA
             }
           });
@@ -137,7 +143,13 @@ Future<void> main(List<String> arguments) async {
 
         await transport.close();
       } catch (e) {
-        auditResults.add(AuditResult(probe.name, AuditStatus.fail, 'Connection/Execution error: $e'));
+        auditResults.add(
+          AuditResult(
+            probe.name,
+            AuditStatus.fail,
+            'Connection/Execution error: $e',
+          ),
+        );
         socket?.close();
       }
     }
@@ -159,7 +171,7 @@ Future<void> main(List<String> arguments) async {
     exit(1);
   } catch (e) {
     if (arguments.contains('--json') || arguments.contains('-j')) {
-      // If we are in JSON mode, we should ideally output an error JSON, 
+      // If we are in JSON mode, we should ideally output an error JSON,
       // but for now just exit silently or with standard error message.
       // The requirement says output single JSON object containing full report.
     }
@@ -207,23 +219,56 @@ String _describeIac(List<int> bytes) {
   final command = bytes[1];
   String cmdStr;
   switch (command) {
-    case 255: cmdStr = 'IAC'; break;
-    case 254: cmdStr = 'DONT'; break;
-    case 253: cmdStr = 'DO'; break;
-    case 252: cmdStr = 'WONT'; break;
-    case 251: cmdStr = 'WILL'; break;
-    case 250: cmdStr = 'SB'; break;
-    case 249: cmdStr = 'GA'; break;
-    case 248: cmdStr = 'EL'; break;
-    case 247: cmdStr = 'EC'; break;
-    case 246: cmdStr = 'AYT'; break;
-    case 245: cmdStr = 'AO'; break;
-    case 244: cmdStr = 'IP'; break;
-    case 243: cmdStr = 'BREAK'; break;
-    case 242: cmdStr = 'DM'; break;
-    case 241: cmdStr = 'NOP'; break;
-    case 240: cmdStr = 'SE'; break;
-    default: cmdStr = 'UNKNOWN($command)';
+    case 255:
+      cmdStr = 'IAC';
+      break;
+    case 254:
+      cmdStr = 'DONT';
+      break;
+    case 253:
+      cmdStr = 'DO';
+      break;
+    case 252:
+      cmdStr = 'WONT';
+      break;
+    case 251:
+      cmdStr = 'WILL';
+      break;
+    case 250:
+      cmdStr = 'SB';
+      break;
+    case 249:
+      cmdStr = 'GA';
+      break;
+    case 248:
+      cmdStr = 'EL';
+      break;
+    case 247:
+      cmdStr = 'EC';
+      break;
+    case 246:
+      cmdStr = 'AYT';
+      break;
+    case 245:
+      cmdStr = 'AO';
+      break;
+    case 244:
+      cmdStr = 'IP';
+      break;
+    case 243:
+      cmdStr = 'BREAK';
+      break;
+    case 242:
+      cmdStr = 'DM';
+      break;
+    case 241:
+      cmdStr = 'NOP';
+      break;
+    case 240:
+      cmdStr = 'SE';
+      break;
+    default:
+      cmdStr = 'UNKNOWN($command)';
   }
 
   if (bytes.length == 2) return 'IAC $cmdStr';
@@ -232,30 +277,59 @@ String _describeIac(List<int> bytes) {
     final option = bytes[2];
     String optStr;
     switch (option) {
-      case 1: optStr = 'ECHO'; break;
-      case 3: optStr = 'SUPPRESS-GO-AHEAD'; break;
-      case 24: optStr = 'TERMINAL-TYPE'; break;
-      case 31: optStr = 'WINDOW-SIZE (NAWS)'; break;
-      case 32: optStr = 'TERMINAL-SPEED'; break;
-      case 33: optStr = 'REMOTE-FLOW-CONTROL'; break;
-      case 34: optStr = 'LINE-MODE'; break;
-      case 36: optStr = 'ENV-VAR'; break;
-      case 39: optStr = 'NEW-ENV-VAR'; break;
-      case 86: optStr = 'MCCP2'; break;
-      case 201: optStr = 'GMCP'; break;
-      default: optStr = 'OPTION($option)';
+      case 1:
+        optStr = 'ECHO';
+        break;
+      case 3:
+        optStr = 'SUPPRESS-GO-AHEAD';
+        break;
+      case 24:
+        optStr = 'TERMINAL-TYPE';
+        break;
+      case 31:
+        optStr = 'WINDOW-SIZE (NAWS)';
+        break;
+      case 32:
+        optStr = 'TERMINAL-SPEED';
+        break;
+      case 33:
+        optStr = 'REMOTE-FLOW-CONTROL';
+        break;
+      case 34:
+        optStr = 'LINE-MODE';
+        break;
+      case 36:
+        optStr = 'ENV-VAR';
+        break;
+      case 39:
+        optStr = 'NEW-ENV-VAR';
+        break;
+      case 86:
+        optStr = 'MCCP2';
+        break;
+      case 201:
+        optStr = 'GMCP';
+        break;
+      default:
+        optStr = 'OPTION($option)';
     }
     return 'IAC $cmdStr $optStr';
   }
 
-  if (command == 250) { // SB
+  if (command == 250) {
+    // SB
     if (bytes.length < 5) return 'IAC SB ... (incomplete)';
     final option = bytes[2];
     String optStr;
     switch (option) {
-      case 86: optStr = 'MCCP2'; break;
-      case 201: optStr = 'GMCP'; break;
-      default: optStr = 'OPTION($option)';
+      case 86:
+        optStr = 'MCCP2';
+        break;
+      case 201:
+        optStr = 'GMCP';
+        break;
+      default:
+        optStr = 'OPTION($option)';
     }
     final content = bytes.sublist(3, bytes.length - 2);
     return 'IAC SB $optStr ${content.length} bytes IAC SE';

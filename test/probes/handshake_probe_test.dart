@@ -12,9 +12,11 @@ void main() {
 
     setUp(() async {
       server = await RawServerSocket.bind(InternetAddress.loopbackIPv4, 0);
-      final transportFuture = RawSocket.connect(InternetAddress.loopbackIPv4, server.port)
-          .then((s) => TelnetTransport(s));
-      
+      final transportFuture = RawSocket.connect(
+        InternetAddress.loopbackIPv4,
+        server.port,
+      ).then((s) => TelnetTransport(s));
+
       clientSocket = await server.first;
       transport = await transportFuture;
     });
@@ -27,11 +29,15 @@ void main() {
 
     test('returns pass when server responds with WILL TTYPE', () async {
       final probe = HandshakeProbe();
-      
+
       clientSocket.listen((event) {
         if (event == RawSocketEvent.read) {
           final bytes = clientSocket.read();
-          if (bytes != null && bytes.length >= 3 && bytes[0] == 255 && bytes[1] == 253 && bytes[2] == 24) {
+          if (bytes != null &&
+              bytes.length >= 3 &&
+              bytes[0] == 255 &&
+              bytes[1] == 253 &&
+              bytes[2] == 24) {
             clientSocket.write([255, 251, 24]);
           }
         }
@@ -45,11 +51,15 @@ void main() {
 
     test('returns pass when server responds with WONT TTYPE', () async {
       final probe = HandshakeProbe();
-      
+
       clientSocket.listen((event) {
         if (event == RawSocketEvent.read) {
           final bytes = clientSocket.read();
-          if (bytes != null && bytes.length >= 3 && bytes[0] == 255 && bytes[1] == 253 && bytes[2] == 24) {
+          if (bytes != null &&
+              bytes.length >= 3 &&
+              bytes[0] == 255 &&
+              bytes[1] == 253 &&
+              bytes[2] == 24) {
             clientSocket.write([255, 252, 24]);
           }
         }
@@ -62,11 +72,11 @@ void main() {
     });
 
     test('returns fail on timeout', () async {
-      // Create a probe with a very short timeout for testing if possible, 
+      // Create a probe with a very short timeout for testing if possible,
       // but since it's hardcoded to 5s, we'll just have to wait or mock it.
       // For now, let's just wait since 5s is not that long.
       final probe = HandshakeProbe();
-      
+
       final result = await probe.run(transport);
 
       expect(result.status, AuditStatus.fail);

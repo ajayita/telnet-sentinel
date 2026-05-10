@@ -6,7 +6,8 @@ import 'package:telnet_sentinel/transport/telnet_transport.dart';
 import 'package:telnet_sentinel/models/telnet_event.dart';
 
 class MockRawSocket extends Stream<RawSocketEvent> implements RawSocket {
-  final StreamController<RawSocketEvent> _controller = StreamController<RawSocketEvent>();
+  final StreamController<RawSocketEvent> _controller =
+      StreamController<RawSocketEvent>();
   final List<Uint8List> _readBuffer = [];
 
   void simulateRead(List<int> bytes) {
@@ -15,8 +16,18 @@ class MockRawSocket extends Stream<RawSocketEvent> implements RawSocket {
   }
 
   @override
-  StreamSubscription<RawSocketEvent> listen(void Function(RawSocketEvent event)? onData, {Function? onError, void Function()? onDone, bool? cancelOnError}) {
-    return _controller.stream.listen(onData, onError: onError, onDone: onDone, cancelOnError: cancelOnError);
+  StreamSubscription<RawSocketEvent> listen(
+    void Function(RawSocketEvent event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) {
+    return _controller.stream.listen(
+      onData,
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: cancelOnError,
+    );
   }
 
   @override
@@ -47,7 +58,7 @@ void main() {
   test('TelnetTransport decompresses data after MCCP2 SB', () async {
     final mockSocket = MockRawSocket();
     final transport = TelnetTransport(mockSocket);
-    
+
     final events = <TelnetEvent>[];
     transport.events.listen(events.add);
 
@@ -64,10 +75,20 @@ void main() {
     await Future.delayed(Duration(milliseconds: 200));
 
     // Verify MCCP2 SB was received
-    expect(events.any((e) => e.type == TelnetEventType.iac && e.bytes.length == 5 && e.bytes[2] == 86), isTrue);
-    
+    expect(
+      events.any(
+        (e) =>
+            e.type == TelnetEventType.iac &&
+            e.bytes.length == 5 &&
+            e.bytes[2] == 86,
+      ),
+      isTrue,
+    );
+
     // Verify "Hello" was decompressed
-    final dataEvents = events.where((e) => e.type == TelnetEventType.data).toList();
+    final dataEvents = events
+        .where((e) => e.type == TelnetEventType.data)
+        .toList();
     final allData = dataEvents.expand((e) => e.bytes).toList();
     expect(String.fromCharCodes(allData), contains('Hello'));
   });

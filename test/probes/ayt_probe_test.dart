@@ -12,9 +12,11 @@ void main() {
 
     setUp(() async {
       server = await RawServerSocket.bind(InternetAddress.loopbackIPv4, 0);
-      final transportFuture = RawSocket.connect(InternetAddress.loopbackIPv4, server.port)
-          .then((s) => TelnetTransport(s));
-      
+      final transportFuture = RawSocket.connect(
+        InternetAddress.loopbackIPv4,
+        server.port,
+      ).then((s) => TelnetTransport(s));
+
       serverSideSocket = await server.first;
       transport = await transportFuture;
     });
@@ -27,12 +29,13 @@ void main() {
 
     test('passes when server responds with data', () async {
       final probe = AytProbe();
-      
+
       bool responded = false;
       serverSideSocket.listen((event) {
         if (event == RawSocketEvent.read && !responded) {
           final bytes = serverSideSocket.read();
-          if (bytes != null && bytes.contains(246)) { // contains AYT
+          if (bytes != null && bytes.contains(246)) {
+            // contains AYT
             serverSideSocket.write('Yes, I am here'.codeUnits);
             responded = true;
           }
@@ -46,7 +49,7 @@ void main() {
 
     test('passes when server responds with a command', () async {
       final probe = AytProbe();
-      
+
       bool responded = false;
       serverSideSocket.listen((event) {
         if (event == RawSocketEvent.read && !responded) {
@@ -60,18 +63,30 @@ void main() {
 
       final result = await probe.run(transport);
       expect(result.status, AuditStatus.pass);
-      expect(result.message, contains('Server responded to AYT with a Telnet command'));
+      expect(
+        result.message,
+        contains('Server responded to AYT with a Telnet command'),
+      );
     });
 
     test('fails on timeout', () async {
       final probe = AytProbe();
       // No server response
-      
-      final result = await probe.run(transport).timeout(Duration(seconds: 6), onTimeout: () {
-          // This should be handled by the probe's internal timeout
-          return AuditResult('timeout', AuditStatus.fail, 'External timeout');
-      });
-      
+
+      final result = await probe
+          .run(transport)
+          .timeout(
+            Duration(seconds: 6),
+            onTimeout: () {
+              // This should be handled by the probe's internal timeout
+              return AuditResult(
+                'timeout',
+                AuditStatus.fail,
+                'External timeout',
+              );
+            },
+          );
+
       // We set timeout to 5 seconds in the probe, so it should fail.
       // Note: In real test we might want to use a shorter timeout for faster tests if we had configurable timeouts.
       expect(result.status, AuditStatus.fail);

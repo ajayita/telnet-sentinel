@@ -12,20 +12,42 @@ class MalformedIacProbe implements Probe {
   Future<AuditResult> run(TelnetTransport transport) async {
     final completer = Completer<AuditResult>();
 
-    final subscription = transport.events.listen((event) {
-      if (!completer.isCompleted) {
-        // If we get any response after our malformed sequence + AYT, it means server survived.
-        completer.complete(AuditResult(name, AuditStatus.pass, 'Server remained responsive after malformed IAC sequences. Received: ${event.type}'));
-      }
-    }, onError: (error) {
-      if (!completer.isCompleted) {
-        completer.complete(AuditResult(name, AuditStatus.fail, 'Connection error after malformed IAC sequences: $error'));
-      }
-    }, onDone: () {
-      if (!completer.isCompleted) {
-        completer.complete(AuditResult(name, AuditStatus.fail, 'Connection closed after malformed IAC sequences.'));
-      }
-    });
+    final subscription = transport.events.listen(
+      (event) {
+        if (!completer.isCompleted) {
+          // If we get any response after our malformed sequence + AYT, it means server survived.
+          completer.complete(
+            AuditResult(
+              name,
+              AuditStatus.pass,
+              'Server remained responsive after malformed IAC sequences. Received: ${event.type}',
+            ),
+          );
+        }
+      },
+      onError: (error) {
+        if (!completer.isCompleted) {
+          completer.complete(
+            AuditResult(
+              name,
+              AuditStatus.fail,
+              'Connection error after malformed IAC sequences: $error',
+            ),
+          );
+        }
+      },
+      onDone: () {
+        if (!completer.isCompleted) {
+          completer.complete(
+            AuditResult(
+              name,
+              AuditStatus.fail,
+              'Connection closed after malformed IAC sequences.',
+            ),
+          );
+        }
+      },
+    );
 
     try {
       // 1. Partial IAC
@@ -46,14 +68,26 @@ class MalformedIacProbe implements Probe {
       return await completer.future.timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          return AuditResult(name, AuditStatus.fail, 'Timeout waiting for response after malformed sequences.');
+          return AuditResult(
+            name,
+            AuditStatus.fail,
+            'Timeout waiting for response after malformed sequences.',
+          );
         },
       );
     } catch (e) {
       if (e is TimeoutException) {
-        return AuditResult(name, AuditStatus.fail, 'Timeout waiting for response after malformed sequences.');
+        return AuditResult(
+          name,
+          AuditStatus.fail,
+          'Timeout waiting for response after malformed sequences.',
+        );
       }
-      return AuditResult(name, AuditStatus.fail, 'Exception during Malformed IAC probe: $e');
+      return AuditResult(
+        name,
+        AuditStatus.fail,
+        'Exception during Malformed IAC probe: $e',
+      );
     } finally {
       await subscription.cancel();
     }

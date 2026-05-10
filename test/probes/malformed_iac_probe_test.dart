@@ -12,9 +12,11 @@ void main() {
 
     setUp(() async {
       server = await RawServerSocket.bind(InternetAddress.loopbackIPv4, 0);
-      final transportFuture = RawSocket.connect(InternetAddress.loopbackIPv4, server.port)
-          .then((s) => TelnetTransport(s));
-      
+      final transportFuture = RawSocket.connect(
+        InternetAddress.loopbackIPv4,
+        server.port,
+      ).then((s) => TelnetTransport(s));
+
       serverSideSocket = await server.first;
       transport = await transportFuture;
     });
@@ -25,39 +27,49 @@ void main() {
       await server.close();
     });
 
-    test('passes when server survives malformed sequences and responds to AYT', () async {
-      final probe = MalformedIacProbe();
-      
-      serverSideSocket.listen((event) {
-        if (event == RawSocketEvent.read) {
-          final bytes = serverSideSocket.read();
-          if (bytes != null && bytes.contains(246)) { // contains AYT
-            serverSideSocket.write([255, 241]); // IAC NOP
+    test(
+      'passes when server survives malformed sequences and responds to AYT',
+      () async {
+        final probe = MalformedIacProbe();
+
+        serverSideSocket.listen((event) {
+          if (event == RawSocketEvent.read) {
+            final bytes = serverSideSocket.read();
+            if (bytes != null && bytes.contains(246)) {
+              // contains AYT
+              serverSideSocket.write([255, 241]); // IAC NOP
+            }
           }
-        }
-      });
+        });
 
-      final result = await probe.run(transport);
-      expect(result.status, AuditStatus.pass);
-      expect(result.message, contains('Server remained responsive'));
-    });
+        final result = await probe.run(transport);
+        expect(result.status, AuditStatus.pass);
+        expect(result.message, contains('Server remained responsive'));
+      },
+    );
 
-    test('fails when server closes connection after malformed sequences', () async {
-      final probe = MalformedIacProbe();
-      
-      serverSideSocket.listen((event) {
-        if (event == RawSocketEvent.read) {
-          final bytes = serverSideSocket.read();
-          if (bytes != null && bytes.contains(255)) {
-             // Close connection on any IAC to simulate crash/closure
-             serverSideSocket.close();
+    test(
+      'fails when server closes connection after malformed sequences',
+      () async {
+        final probe = MalformedIacProbe();
+
+        serverSideSocket.listen((event) {
+          if (event == RawSocketEvent.read) {
+            final bytes = serverSideSocket.read();
+            if (bytes != null && bytes.contains(255)) {
+              // Close connection on any IAC to simulate crash/closure
+              serverSideSocket.close();
+            }
           }
-        }
-      });
+        });
 
-      final result = await probe.run(transport);
-      expect(result.status, AuditStatus.fail);
-      expect(result.message, anyOf(contains('Connection closed'), contains('Connection error')));
-    });
+        final result = await probe.run(transport);
+        expect(result.status, AuditStatus.fail);
+        expect(
+          result.message,
+          anyOf(contains('Connection closed'), contains('Connection error')),
+        );
+      },
+    );
   });
 }

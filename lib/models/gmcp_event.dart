@@ -6,7 +6,8 @@ class GmcpEvent {
   GmcpEvent(this.package, this.message, this.data);
 
   @override
-  String toString() => 'GmcpEvent(package: $package, message: $message, data: $data)';
+  String toString() =>
+      'GmcpEvent(package: $package, message: $message, data: $data)';
 
   @override
   bool operator ==(Object other) =>
@@ -18,5 +19,6 @@ class GmcpEvent {
           data.toString() == other.data.toString(); // Simple way to compare maps for tests
 
   @override
-  int get hashCode => package.hashCode ^ message.hashCode ^ data.toString().hashCode;
+  int get hashCode =>
+      package.hashCode ^ message.hashCode ^ data.toString().hashCode;
 }

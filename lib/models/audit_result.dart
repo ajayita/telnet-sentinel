@@ -6,12 +6,17 @@ class AuditResult {
   final String message;
   final Map<String, dynamic> metadata;
 
-  AuditResult(this.probeName, this.status, this.message, {this.metadata = const {}});
+  AuditResult(
+    this.probeName,
+    this.status,
+    this.message, {
+    this.metadata = const {},
+  });
 
   Map<String, dynamic> toJson() => {
-        'probeName': probeName,
-        'status': status.name,
-        'message': message,
-        'metadata': metadata,
-      };
+    'probeName': probeName,
+    'status': status.name,
+    'message': message,
+    'metadata': metadata,
+  };
 }

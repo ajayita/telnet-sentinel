@@ -1,12 +1,10 @@
 name: telnet_sentinel
-description: A sample command-line application with basic argument parsing.
+description: A diagnostic and auditing framework for bridging ancient Telnet communication standards with modern software reliability.
 version: 0.0.1
-# repository: https://github.com/my_org/my_repo
 
 environment:
   sdk: ^3.11.5
 
-# Add regular dependencies here.
 dependencies:
   args: ^2.7.0
   yaml: ^3.1.3

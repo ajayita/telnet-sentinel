@@ -4,7 +4,7 @@ import 'dart:async';
 class GoodServer {
   final RawServerSocket _server;
   final List<RawSocket> _clients = [];
-  
+
   GoodServer._(this._server) {
     _server.listen((client) {
       _clients.add(client);
@@ -22,16 +22,18 @@ class GoodServer {
       });
     });
   }
-  
+
   static Future<GoodServer> bind() async {
     final s = await RawServerSocket.bind(InternetAddress.loopbackIPv4, 0);
     return GoodServer._(s);
   }
-  
+
   int get port => _server.port;
-  
+
   Future<void> close() async {
-    for (var c in _clients) c.close();
+    for (var c in _clients) {
+      c.close();
+    }
     await _server.close();
   }
 }
