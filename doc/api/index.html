@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="telnet_sentinel API docs, for the Dart programming language.">
+  <title>telnet_sentinel - Dart API docs</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="static-assets/github.css?v1">
+  <link rel="stylesheet" href="static-assets/styles.css?v1">
+  <link rel="icon" href="static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li class="self-crumb">telnet_sentinel package</li>
+  </ol>
+  <div class="self-name">telnet_sentinel</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div id="dartdoc-main-content" class="main-content">
+      
+<section class="desc markdown">
+  <h1 id="telnet_sentinel">telnet_sentinel</h1>
+<p>A diagnostic and auditing framework designed to bridge the gap between ancient communication standards and modern software reliability. While the Telnet protocol is often dismissed as "legacy," it remains the backbone of the MUD (Multi-User Dungeon) gaming community and a critical interface for industrial IoT and high-end networking hardware.</p>
+<h2 id="what-the-package-does">What the package does</h2>
+<ul>
+<li><strong>Active Protocol Auditing</strong>: Systematically probes a server’s implementation of various protocol extensions (RFC 854) to ensure they are stable, compliant, and secure.</li>
+<li><strong>Adversarial Probing</strong>: Tests for malformed IAC sequences and negotiation loops.</li>
+<li><strong>MUD Extensions</strong>: Provides support for MCCP2 (Zlib compression) and GMCP (JSON out-of-band data).</li>
+<li><strong>Traffic Visualizer</strong>: Offers a real-time sniffer mode for debugging Telnet handshakes.</li>
+<li><strong>Machine-Readable Reports</strong>: Outputs native JSON reports for CI/CD integration.</li>
+</ul>
+<h2 id="what-the-package-does-not-do">What the package does not do</h2>
+<ul>
+<li>It is not a standard interactive Telnet client for human users to play games or manage systems.</li>
+<li>It does not handle terminal emulation or ANSI color code rendering.</li>
+<li>It does not automatically fix server-side protocol bugs.</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<pre class="language-yaml"><code class="language-yaml">dependencies:
+  telnet_sentinel:
+    path: .
+</code></pre>
+<h2 id="basic-usage">Basic Usage</h2>
+<p>Run an audit against a target:</p>
+<pre class="language-bash"><code class="language-bash">dart run bin/telnet_sentinel.dart example.com 23
+</code></pre>
+<p>Run in <strong>Sniffer Mode</strong> to see live traffic:</p>
+<pre class="language-bash"><code class="language-bash">dart run bin/telnet_sentinel.dart example.com --sniffer
+</code></pre>
+<p>Export results as <strong>JSON</strong>:</p>
+<pre class="language-bash"><code class="language-bash">dart run bin/telnet_sentinel.dart example.com --json
+</code></pre>
+<p>Using the library programmatically:</p>
+<pre class="language-dart"><code class="language-dart">import 'dart:io';
+import 'package:telnet_sentinel/transport/telnet_transport.dart';
+import 'package:telnet_sentinel/probes/handshake_probe.dart';
+
+Future&lt;void&gt; main() async {
+  final socket = await RawSocket.connect('example.com', 23);
+  final transport = TelnetTransport(socket);
+  final probe = HandshakeProbe();
+
+  final result = await probe.run(transport);
+  print('Result: ${result.status}');
+
+  await transport.close();
+}
+</code></pre>
+<h2 id="error-handling">Error handling</h2>
+<p><code>telnet_sentinel</code> gracefully catches connection errors, malformed packets, and execution failures, returning an <code>AuditResult</code> with a <code>fail</code> status rather than crashing. Ensure you check the <code>hasFailures</code> flag in the <code>AuditReport</code>.</p>
+<h2 id="testing">Testing</h2>
+<p>Run tests with:</p>
+<pre class="language-bash"><code class="language-bash">dart test
+</code></pre>
+<h2 id="analysis-and-formatting">Analysis and formatting</h2>
+<pre class="language-bash"><code class="language-bash">dart analyze
+dart format .
+</code></pre>
+<h2 id="security-note">Security Note</h2>
+<p>This package handles raw network traffic, which may include sensitive data like credentials or proprietary information. Be cautious when using the <code>--sniffer</code> mode in production or logging raw protocol bytes, as they are not encrypted. Prefer analyzing JSON reports over inspecting raw packet streams manually.</p>
+<h2 id="documentation">Documentation</h2>
+<p>This project uses a progressive context loading documentation architecture.</p>
+<ul>
+<li><a href="docs/handbook/index.md">Developer Handbook</a>: Authoritative explanation of how the system works.</li>
+<li><a href="docs/adr/README.md">Architecture Decision Records (ADRs)</a>: Record of significant design decisions.</li>
+<li><a href="docs/working-notes/README.md">Working Notes</a>: Temporary and exploratory notes.</li>
+<li><a href="CHANGELOG.md">Changelog</a>: Record of completed changes.</li>
+<li><a href="AGENTS.md">Agent Instructions</a>: Guidance for AI assistants working in this repo.</li>
+</ul>
+</section>
+
+
+      <section class="summary">
+          <h2>Libraries</h2>
+        <dl>
+          <dt id="audit_report">
+  <span class="name"><a href="models_audit_report/">models/audit_report</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="audit_result">
+  <span class="name"><a href="models_audit_result/">models/audit_result</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="gmcp_event">
+  <span class="name"><a href="models_gmcp_event/">models/gmcp_event</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="telnet_event">
+  <span class="name"><a href="models_telnet_event/">models/telnet_event</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="ayt_probe">
+  <span class="name"><a href="probes_ayt_probe/">probes/ayt_probe</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="binary_mode_probe">
+  <span class="name"><a href="probes_binary_mode_probe/">probes/binary_mode_probe</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="gmcp_probe">
+  <span class="name"><a href="probes_gmcp_probe/">probes/gmcp_probe</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="handshake_probe">
+  <span class="name"><a href="probes_handshake_probe/">probes/handshake_probe</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="malformed_iac_probe">
+  <span class="name"><a href="probes_malformed_iac_probe/">probes/malformed_iac_probe</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="mccp_probe">
+  <span class="name"><a href="probes_mccp_probe/">probes/mccp_probe</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="negotiation_loop_probe">
+  <span class="name"><a href="probes_negotiation_loop_probe/">probes/negotiation_loop_probe</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="probe_interface">
+  <span class="name"><a href="probes_probe_interface/">probes/probe_interface</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="negotiation_state_manager">
+  <span class="name"><a href="state_negotiation_state_manager/">state/negotiation_state_manager</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="gmcp_parser">
+  <span class="name"><a href="transport_gmcp_parser/">transport/gmcp_parser</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+          <dt id="telnet_transport">
+  <span class="name"><a href="transport_telnet_transport/">transport/telnet_transport</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+        </dl>
+      </section>
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li class="self-crumb">telnet_sentinel package</li>
+</ol>
+
+    <h5 class="hidden-xs"><span class="package-name">telnet_sentinel</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="models_audit_report/">models/audit_report</a></li>
+      <li><a href="models_audit_result/">models/audit_result</a></li>
+      <li><a href="models_gmcp_event/">models/gmcp_event</a></li>
+      <li><a href="models_telnet_event/">models/telnet_event</a></li>
+      <li><a href="probes_ayt_probe/">probes/ayt_probe</a></li>
+      <li><a href="probes_binary_mode_probe/">probes/binary_mode_probe</a></li>
+      <li><a href="probes_gmcp_probe/">probes/gmcp_probe</a></li>
+      <li><a href="probes_handshake_probe/">probes/handshake_probe</a></li>
+      <li><a href="probes_malformed_iac_probe/">probes/malformed_iac_probe</a></li>
+      <li><a href="probes_mccp_probe/">probes/mccp_probe</a></li>
+      <li><a href="probes_negotiation_loop_probe/">probes/negotiation_loop_probe</a></li>
+      <li><a href="probes_probe_interface/">probes/probe_interface</a></li>
+      <li><a href="state_negotiation_state_manager/">state/negotiation_state_manager</a></li>
+      <li><a href="transport_gmcp_parser/">transport/gmcp_parser</a></li>
+      <li><a href="transport_telnet_transport/">transport/telnet_transport</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div>
+</main>
+<footer>
+  <span class="no-break">
+    telnet_sentinel
+      0.0.1
+  </span>
+  
+</footer>
+
+
+<script src="static-assets/highlight.pack.js?v1"></script>
+<script src="static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

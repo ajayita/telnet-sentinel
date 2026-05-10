@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the run method from the MccpProbe class, for the Dart programming language.">
+  <title>run method - MccpProbe class - mccp_probe library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">telnet_sentinel</a></li>
+    <li><a href="../../probes_mccp_probe/">probes&#47;mccp_probe.dart</a></li>
+    <li><a href="../../probes_mccp_probe/MccpProbe-class.html">MccpProbe</a></li>
+    <li class="self-crumb">run method</li>
+  </ol>
+  <div class="self-name">run</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="probes_mccp_probe&#47;MccpProbe-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">run</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+  <div>
+    <ol class="annotation-list">
+        <li>@<a href="https://api.dart.dev/stable/3.11.6/dart-core/override-constant.html">override</a></li>
+    </ol>
+  </div>
+<span class="returntype"><a href="https://api.dart.dev/stable/3.11.6/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../models_audit_result/AuditResult-class.html">AuditResult</a></span>&gt;</span></span>
+<span class="name ">run</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="run-param-transport"><span class="type-annotation"><a href="../../transport_telnet_transport/TelnetTransport-class.html">TelnetTransport</a></span> <span class="parameter-name">transport</span></span></li>
+</ol>)
+
+      <div class="features"><span class="feature">override</span></div>
+
+    </section>
+    
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">@override
+Future&lt;AuditResult&gt; run(TelnetTransport transport) async {
+  final completer = Completer&lt;AuditResult&gt;();
+  bool willReceived = false;
+  bool sbReceived = false;
+
+  final stateManager = NegotiationStateManager(
+    onSend: (bytes) =&gt; transport.write(bytes),
+  );
+
+  final subscription = transport.events.listen(
+    (event) {
+      if (completer.isCompleted) return;
+
+      if (event.type == TelnetEventType.iac) {
+        final bytes = event.bytes;
+        stateManager.handleCommand(bytes);
+
+        &#47;&#47; Check for WILL MCCP2
+        if (bytes.length == 3 &amp;&amp;
+            bytes[0] == NegotiationStateManager.iac &amp;&amp;
+            bytes[1] == NegotiationStateManager.will &amp;&amp;
+            bytes[2] == mccp2) {
+          willReceived = true;
+        }
+
+        &#47;&#47; Check for WONT MCCP2
+        if (bytes.length == 3 &amp;&amp;
+            bytes[0] == NegotiationStateManager.iac &amp;&amp;
+            bytes[1] == NegotiationStateManager.wont &amp;&amp;
+            bytes[2] == mccp2) {
+          completer.complete(
+            AuditResult(
+              name,
+              AuditStatus.fail,
+              &#39;Server refused MCCP2 (sent WONT MCCP2).&#39;,
+            ),
+          );
+        }
+
+        &#47;&#47; Check for IAC SB MCCP2 IAC SE
+        if (bytes.length == 5 &amp;&amp;
+            bytes[0] == NegotiationStateManager.iac &amp;&amp;
+            bytes[1] == NegotiationStateManager.sb &amp;&amp;
+            bytes[2] == mccp2 &amp;&amp;
+            bytes[3] == NegotiationStateManager.iac &amp;&amp;
+            bytes[4] == NegotiationStateManager.se) {
+          sbReceived = true;
+        }
+      } else if (event.type == TelnetEventType.data) {
+        if (sbReceived) {
+          completer.complete(
+            AuditResult(
+              name,
+              AuditStatus.pass,
+              &#39;MCCP2 negotiation successful and compressed data received.&#39;,
+            ),
+          );
+        }
+      }
+    },
+    onError: (error) {
+      if (!completer.isCompleted) {
+        completer.complete(
+          AuditResult(
+            name,
+            AuditStatus.fail,
+            &#39;Error during MCCP2 probe: $error&#39;,
+          ),
+        );
+      }
+    },
+  );
+
+  try {
+    &#47;&#47; Request MCCP2
+    stateManager.requestDo(mccp2);
+
+    return await completer.future.timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        String reason = &#39;Timeout waiting for MCCP2 response.&#39;;
+        if (willReceived &amp;&amp; !sbReceived) {
+          reason =
+              &#39;Server sent WILL MCCP2 but did not start compression (no SB MCCP2).&#39;;
+        }
+        return AuditResult(name, AuditStatus.fail, reason);
+      },
+    );
+  } catch (e) {
+    if (e is TimeoutException) {
+      String reason = &#39;Timeout waiting for MCCP2 response.&#39;;
+      if (willReceived &amp;&amp; !sbReceived) {
+        reason =
+            &#39;Server sent WILL MCCP2 but did not start compression (no SB MCCP2).&#39;;
+      }
+      return AuditResult(name, AuditStatus.fail, reason);
+    }
+    return AuditResult(
+      name,
+      AuditStatus.fail,
+      &#39;Exception during MCCP2 probe: $e&#39;,
+    );
+  } finally {
+    await subscription.cancel();
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">telnet_sentinel</a></li>
+    <li><a href="../../probes_mccp_probe/">mccp_probe</a></li>
+    <li><a href="../../probes_mccp_probe/MccpProbe-class.html">MccpProbe</a></li>
+    <li class="self-crumb">run method</li>
+</ol>
+
+    <h5>MccpProbe class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    telnet_sentinel
+      0.0.1
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

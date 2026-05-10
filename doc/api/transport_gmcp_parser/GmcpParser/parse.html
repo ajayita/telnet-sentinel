@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the parse method from the GmcpParser class, for the Dart programming language.">
+  <title>parse method - GmcpParser class - gmcp_parser library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">telnet_sentinel</a></li>
+    <li><a href="../../transport_gmcp_parser/">transport&#47;gmcp_parser.dart</a></li>
+    <li><a href="../../transport_gmcp_parser/GmcpParser-class.html">GmcpParser</a></li>
+    <li class="self-crumb">parse static method</li>
+  </ol>
+  <div class="self-name">parse</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="transport_gmcp_parser&#47;GmcpParser-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">parse</span> static method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="../../models_gmcp_event/GmcpEvent-class.html">GmcpEvent</a>?</span>
+<span class="name ">parse</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="parse-param-bytes"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.11.6/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.11.6/dart-core/int-class.html">int</a></span>&gt;</span></span> <span class="parameter-name">bytes</span></span></li>
+</ol>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Parses raw GMCP subnegotiation bytes into a <a href="../../models_gmcp_event/GmcpEvent-class.html">GmcpEvent</a>.</p>
+<p>The <code>bytes</code> should include the IAC SB 201 prefix and IAC SE suffix.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">static GmcpEvent? parse(List&lt;int&gt; bytes) {
+  &#47;&#47; Basic validation: IAC SB 201 ... IAC SE
+  &#47;&#47; Minimum length: IAC SB 201 (3) + &quot;A.B&quot; (3) + IAC SE (2) = 8
+  if (bytes.length &lt; 5 ||
+      bytes[0] != 255 ||
+      bytes[1] != 250 ||
+      bytes[2] != 201 ||
+      bytes[bytes.length - 2] != 255 ||
+      bytes[bytes.length - 1] != 240) {
+    return null;
+  }
+
+  &#47;&#47; Extract the payload (everything between option 201 and IAC SE)
+  final payloadBytes = bytes.sublist(3, bytes.length - 2);
+  if (payloadBytes.isEmpty) return null;
+
+  final rawString = utf8.decode(payloadBytes).trim();
+  if (rawString.isEmpty) return null;
+
+  &#47;&#47; GMCP format: Package.Message [JSON]
+  &#47;&#47; Example: Core.Welcome {&quot;version&quot;: &quot;1.0&quot;}
+
+  String packageMessage;
+  Map&lt;String, dynamic&gt; data = {};
+
+  final spaceIndex = rawString.indexOf(&#39; &#39;);
+  if (spaceIndex != -1) {
+    packageMessage = rawString.substring(0, spaceIndex);
+    final jsonPart = rawString.substring(spaceIndex + 1).trim();
+    if (jsonPart.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(jsonPart);
+        if (decoded is Map&lt;String, dynamic&gt;) {
+          data = decoded;
+        }
+      } catch (_) {
+        &#47;&#47; If JSON is invalid, we return the event with empty data
+        &#47;&#47; or we could potentially throw an error depending on requirements.
+        &#47;&#47; For now, let&#39;s keep it robust.
+      }
+    }
+  } else {
+    packageMessage = rawString;
+  }
+
+  &#47;&#47; Split Package.Message
+  final dotIndex = packageMessage.lastIndexOf(&#39;.&#39;);
+  String package;
+  String message;
+
+  if (dotIndex != -1) {
+    package = packageMessage.substring(0, dotIndex);
+    message = packageMessage.substring(dotIndex + 1);
+  } else {
+    package = &#39;&#39;;
+    message = packageMessage;
+  }
+
+  return GmcpEvent(package, message, data);
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">telnet_sentinel</a></li>
+    <li><a href="../../transport_gmcp_parser/">gmcp_parser</a></li>
+    <li><a href="../../transport_gmcp_parser/GmcpParser-class.html">GmcpParser</a></li>
+    <li class="self-crumb">parse static method</li>
+</ol>
+
+    <h5>GmcpParser class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    telnet_sentinel
+      0.0.1
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
