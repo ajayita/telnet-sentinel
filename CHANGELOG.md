@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added a GitHub Pages root landing page under `docs/` and a `.nojekyll` marker so the generated `docs/api/` documentation can be published cleanly.
 - Added committed manual Telnet verification tooling for running the current full probe suite against a controlled local `127.0.0.1:2323` target.
 - Added probe scenario self-tests with dedicated loopback `RawSocket` targets for AYT, handshake, GMCP, negotiation-loop, and malformed-IAC probe behavior.
 - Added ADR-0003 to record that probe scenario tests complement, but do not replace, fixture-based transcript conformance tests.
