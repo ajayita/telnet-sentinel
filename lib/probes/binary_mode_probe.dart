@@ -19,6 +19,7 @@ class BinaryModeProbe implements Probe {
 
     final subscription = transport.events.listen(
       (event) {
+        if (completer.isCompleted) return;
         if (event.type == TelnetEventType.iac) {
           stateManager.handleCommand(event.bytes);
 
