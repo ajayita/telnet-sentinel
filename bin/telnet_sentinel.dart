@@ -147,5 +147,3 @@ String _getStatusLabel(AuditStatus status) {
       return '\x1B[33m[WARN]\x1B[0m'; // Yellow
   }
 }
-
-

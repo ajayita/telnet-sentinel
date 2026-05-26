@@ -167,16 +167,7 @@ void main() {
       expect(events.length, 3);
       expect(events[0].type, TelnetEventType.data);
       expect(events[1].type, TelnetEventType.iac);
-      expect(events[1].bytes, [
-        0xFF,
-        0xFA,
-        0x18,
-        0x01,
-        0xFF,
-        0x02,
-        0xFF,
-        0xF0,
-      ]);
+      expect(events[1].bytes, [0xFF, 0xFA, 0x18, 0x01, 0xFF, 0x02, 0xFF, 0xF0]);
       expect(events[2].type, TelnetEventType.data);
     });
 

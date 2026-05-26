@@ -190,7 +190,10 @@ void main() {
 
         manager.requestDont(option); // -> wantNo
         manager.requestDo(option); // -> wantNoOpposite
-        expect(sentBytes, equals([255, 254, 3])); // sent DONT first, no new bytes on opposite queue
+        expect(
+          sentBytes,
+          equals([255, 254, 3]),
+        ); // sent DONT first, no new bytes on opposite queue
         sentBytes.clear();
 
         manager.handleWont(option); // receiving WONT

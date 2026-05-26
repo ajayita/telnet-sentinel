@@ -77,7 +77,9 @@ class TelnetTransport {
   void _processBytes(List<int> bytes, {bool fromDecompressor = false}) {
     _pendingBytes.addAll(bytes);
     if (_pendingBytes.length > 65536) {
-      throw TelnetProtocolException('Buffer size ceiling exceeded (OOM safeguard)');
+      throw TelnetProtocolException(
+        'Buffer size ceiling exceeded (OOM safeguard)',
+      );
     }
 
     if (_isProcessing) {
@@ -126,16 +128,16 @@ class TelnetTransport {
                 sbBytesList.addAll(rawSb.sublist(0, 3)); // IAC SB <option>
                 for (int j = 3; j < rawSb.length - 2; j++) {
                   sbBytesList.add(rawSb[j]);
-                  if (rawSb[j] == 255 && j + 1 < rawSb.length - 2 && rawSb[j + 1] == 255) {
+                  if (rawSb[j] == 255 &&
+                      j + 1 < rawSb.length - 2 &&
+                      rawSb[j + 1] == 255) {
                     j++; // Skip the second IAC
                   }
                 }
                 sbBytesList.addAll(rawSb.sublist(rawSb.length - 2)); // IAC SE
                 final sbBytes = Uint8List.fromList(sbBytesList);
 
-                _controller.add(
-                  TelnetEvent(TelnetEventType.iac, sbBytes),
-                );
+                _controller.add(TelnetEvent(TelnetEventType.iac, sbBytes));
                 _pendingBytes.removeRange(0, seIndex + 1);
 
                 // MCCP2 check: IAC SB 86 IAC SE

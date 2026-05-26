@@ -1,13 +1,6 @@
 import 'dart:typed_data';
 
-enum OptionState {
-  no,
-  wantYes,
-  wantYesOpposite,
-  yes,
-  wantNo,
-  wantNoOpposite,
-}
+enum OptionState { no, wantYes, wantYesOpposite, yes, wantNo, wantNoOpposite }
 
 class NegotiationStateManager {
   static const int iac = 255;

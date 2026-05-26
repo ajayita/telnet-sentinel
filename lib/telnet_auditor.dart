@@ -28,15 +28,17 @@ class TelnetAuditor {
     this.port = 23,
     this.connectionTimeout = const Duration(seconds: 5),
     List<Probe>? customProbes,
-  }) : probes = customProbes ?? [
-          HandshakeProbe(),
-          AytProbe(),
-          BinaryModeProbe(),
-          GmcpProbe(),
-          MccpProbe(),
-          MalformedIacProbe(),
-          NegotiationLoopProbe(),
-        ];
+  }) : probes =
+           customProbes ??
+           [
+             HandshakeProbe(),
+             AytProbe(),
+             BinaryModeProbe(),
+             GmcpProbe(),
+             MccpProbe(),
+             MalformedIacProbe(),
+             NegotiationLoopProbe(),
+           ];
 
   /// Runs the complete suite of Telnet probes.
   ///
@@ -105,9 +107,7 @@ class TelnetAuditor {
       print('\x1B[36m[IAC] $description\x1B[0m'); // Cyan for IAC
     } else {
       final data = utf8.decode(event.bytes, allowMalformed: true);
-      final escapedData = data
-          .replaceAll('\r', '\\r')
-          .replaceAll('\n', '\\n');
+      final escapedData = data.replaceAll('\r', '\\r').replaceAll('\n', '\\n');
       print('\x1B[32m[DATA] $escapedData\x1B[0m'); // Green for DATA
     }
   }
