@@ -22,13 +22,19 @@ class TelnetTransport {
 
   void _onSocketEvent(RawSocketEvent event) {
     if (event == RawSocketEvent.read) {
-      final bytes = _socket.read();
-      if (bytes != null) {
-        if (_isDecompressing) {
-          _decompressorSink?.add(bytes);
-        } else {
-          _processBytes(bytes);
+      try {
+        while (true) {
+          final bytes = _socket.read();
+          if (bytes == null || bytes.isEmpty) break;
+          if (_isDecompressing) {
+            _decompressorSink?.add(bytes);
+          } else {
+            _processBytes(bytes);
+          }
         }
+      } catch (e) {
+        _onError(e);
+        close();
       }
     } else if (event == RawSocketEvent.readClosed) {
       _onDone();
@@ -49,6 +55,9 @@ class TelnetTransport {
 
   void _processBytes(List<int> bytes, {bool fromDecompressor = false}) {
     _pendingBytes.addAll(bytes);
+    if (_pendingBytes.length > 65536) {
+      throw TelnetProtocolException('Buffer size ceiling exceeded (OOM safeguard)');
+    }
 
     if (_isProcessing) {
       return;
@@ -90,9 +99,21 @@ class TelnetTransport {
                 }
               }
               if (seIndex != -1) {
-                final sbBytes = _pendingBytes.sublist(0, seIndex + 1);
+                final rawSb = _pendingBytes.sublist(0, seIndex + 1);
+                // Unescape IAC (255 255) inside the payload part of the subnegotiation
+                final List<int> sbBytesList = [];
+                sbBytesList.addAll(rawSb.sublist(0, 3)); // IAC SB <option>
+                for (int j = 3; j < rawSb.length - 2; j++) {
+                  sbBytesList.add(rawSb[j]);
+                  if (rawSb[j] == 255 && j + 1 < rawSb.length - 2 && rawSb[j + 1] == 255) {
+                    j++; // Skip the second IAC
+                  }
+                }
+                sbBytesList.addAll(rawSb.sublist(rawSb.length - 2)); // IAC SE
+                final sbBytes = Uint8List.fromList(sbBytesList);
+
                 _controller.add(
-                  TelnetEvent(TelnetEventType.iac, Uint8List.fromList(sbBytes)),
+                  TelnetEvent(TelnetEventType.iac, sbBytes),
                 );
                 _pendingBytes.removeRange(0, seIndex + 1);
 
@@ -159,6 +180,9 @@ class TelnetTransport {
   }
 
   Future<void> close() async {
+    try {
+      _decompressorSink?.close();
+    } catch (_) {}
     _socket.shutdown(SocketDirection.both);
     _socket.close();
     _onDone();
@@ -189,4 +213,11 @@ class _DecompressionSink implements Sink<List<int>> {
 
   @override
   void close() {}
+}
+
+class TelnetProtocolException implements Exception {
+  final String message;
+  TelnetProtocolException(this.message);
+  @override
+  String toString() => 'TelnetProtocolException: $message';
 }
