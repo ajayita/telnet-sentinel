@@ -21,7 +21,12 @@ class GmcpParser {
     final payloadBytes = bytes.sublist(3, bytes.length - 2);
     if (payloadBytes.isEmpty) return null;
 
-    final rawString = utf8.decode(payloadBytes).trim();
+    String rawString;
+    try {
+      rawString = utf8.decode(payloadBytes, allowMalformed: true).trim();
+    } catch (_) {
+      return null;
+    }
     if (rawString.isEmpty) return null;
 
     // GMCP format: Package.Message [JSON]
