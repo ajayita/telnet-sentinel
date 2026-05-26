@@ -23,7 +23,7 @@ class TelnetTransport {
   void _onSocketEvent(RawSocketEvent event) {
     if (event == RawSocketEvent.read) {
       try {
-        while (true) {
+        while (_socket.available() > 0) {
           final bytes = _socket.read();
           if (bytes == null || bytes.isEmpty) break;
           if (_isDecompressing) {
