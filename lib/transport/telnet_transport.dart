@@ -23,13 +23,34 @@ class TelnetTransport {
   void _onSocketEvent(RawSocketEvent event) {
     if (event == RawSocketEvent.read) {
       try {
-        while (_socket.available() > 0) {
+        int avail = 0;
+        try {
+          avail = _socket.available();
+        } catch (_) {
+          // If available() throws/is not supported (e.g. basic mocks), read once fallback
+          final bytes = _socket.read();
+          if (bytes != null && bytes.isNotEmpty) {
+            if (_isDecompressing) {
+              _decompressorSink?.add(bytes);
+            } else {
+              _processBytes(bytes);
+            }
+          }
+          return;
+        }
+
+        while (avail > 0) {
           final bytes = _socket.read();
           if (bytes == null || bytes.isEmpty) break;
           if (_isDecompressing) {
             _decompressorSink?.add(bytes);
           } else {
             _processBytes(bytes);
+          }
+          try {
+            avail = _socket.available();
+          } catch (_) {
+            break;
           }
         }
       } catch (e) {

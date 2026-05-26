@@ -37,6 +37,11 @@ class MockRawSocket extends Stream<RawSocketEvent> implements RawSocket {
   }
 
   @override
+  int available() {
+    return _readBuffer.fold(0, (sum, list) => sum + list.length);
+  }
+
+  @override
   void shutdown(SocketDirection direction) {}
 
   @override
