@@ -1,6 +1,13 @@
 import 'dart:typed_data';
 
-enum OptionState { no, wantYes, yes, wantNo }
+enum OptionState {
+  no,
+  wantYes,
+  wantYesOpposite,
+  yes,
+  wantNo,
+  wantNoOpposite,
+}
 
 class NegotiationStateManager {
   static const int iac = 255;
@@ -32,20 +39,26 @@ class NegotiationStateManager {
     final state = usStates[option] ?? OptionState.no;
     switch (state) {
       case OptionState.no:
-        // For now, we agree to everything requested unless it's a security risk.
-        // But for Task 2, we just follow the state transitions.
+        // We agree to enable: send WILL, transition to yes
         _send(will, option);
         usStates[option] = OptionState.yes;
         break;
       case OptionState.wantYes:
         usStates[option] = OptionState.yes;
         break;
+      case OptionState.wantYesOpposite:
+        _send(wont, option);
+        usStates[option] = OptionState.wantNo;
+        break;
       case OptionState.yes:
-        // Already enabled, do nothing.
+        // Already enabled, do nothing
         break;
       case OptionState.wantNo:
-        // Should not happen?
-        usStates[option] = OptionState.no;
+        // Error. Accept anyway: transition to yes.
+        usStates[option] = OptionState.yes;
+        break;
+      case OptionState.wantNoOpposite:
+        usStates[option] = OptionState.yes;
         break;
     }
   }
@@ -54,20 +67,25 @@ class NegotiationStateManager {
     final state = usStates[option] ?? OptionState.no;
     switch (state) {
       case OptionState.no:
-        // Already disabled, do nothing.
+        // Already disabled, do nothing
         break;
       case OptionState.wantYes:
-        // They rejected our request to enable it.
+        usStates[option] = OptionState.no;
+        break;
+      case OptionState.wantYesOpposite:
         usStates[option] = OptionState.no;
         break;
       case OptionState.yes:
-        // They want us to stop. Mandatory acknowledgment.
+        // Required acknowledgement: send WONT, transition to no
         _send(wont, option);
         usStates[option] = OptionState.no;
         break;
       case OptionState.wantNo:
-        // Acknowledgment of our request to disable.
         usStates[option] = OptionState.no;
+        break;
+      case OptionState.wantNoOpposite:
+        _send(will, option);
+        usStates[option] = OptionState.wantYes;
         break;
     }
   }
@@ -76,20 +94,26 @@ class NegotiationStateManager {
     final state = themStates[option] ?? OptionState.no;
     switch (state) {
       case OptionState.no:
-        // Remote side says WILL. If we want them to do it, we say DO.
-        // For now, we'll agree.
+        // We agree to enable: send DO, transition to yes
         _send(doCmd, option);
         themStates[option] = OptionState.yes;
         break;
       case OptionState.wantYes:
         themStates[option] = OptionState.yes;
         break;
+      case OptionState.wantYesOpposite:
+        _send(dont, option);
+        themStates[option] = OptionState.wantNo;
+        break;
       case OptionState.yes:
-        // Already enabled.
+        // Already enabled, do nothing
         break;
       case OptionState.wantNo:
-        // Should not happen?
-        themStates[option] = OptionState.no;
+        // Error. Accept anyway: transition to yes.
+        themStates[option] = OptionState.yes;
+        break;
+      case OptionState.wantNoOpposite:
+        themStates[option] = OptionState.yes;
         break;
     }
   }
@@ -98,53 +122,106 @@ class NegotiationStateManager {
     final state = themStates[option] ?? OptionState.no;
     switch (state) {
       case OptionState.no:
-        // Already disabled.
+        // Already disabled, do nothing
         break;
       case OptionState.wantYes:
-        // They rejected our request to have them enable it.
+        themStates[option] = OptionState.no;
+        break;
+      case OptionState.wantYesOpposite:
         themStates[option] = OptionState.no;
         break;
       case OptionState.yes:
-        // They stopped doing it. Mandatory acknowledgment.
+        // Required acknowledgement: send DONT, transition to no
         _send(dont, option);
         themStates[option] = OptionState.no;
         break;
       case OptionState.wantNo:
-        // Acknowledgment of our request to have them stop.
         themStates[option] = OptionState.no;
+        break;
+      case OptionState.wantNoOpposite:
+        _send(doCmd, option);
+        themStates[option] = OptionState.wantYes;
         break;
     }
   }
 
   void requestDo(int option) {
     final state = themStates[option] ?? OptionState.no;
-    if (state == OptionState.no) {
-      themStates[option] = OptionState.wantYes;
-      _send(doCmd, option);
+    switch (state) {
+      case OptionState.no:
+        themStates[option] = OptionState.wantYes;
+        _send(doCmd, option);
+        break;
+      case OptionState.wantNo:
+        themStates[option] = OptionState.wantNoOpposite;
+        break;
+      case OptionState.wantYesOpposite:
+        themStates[option] = OptionState.wantYes;
+        break;
+      case OptionState.yes:
+      case OptionState.wantYes:
+      case OptionState.wantNoOpposite:
+        break;
     }
   }
 
   void requestDont(int option) {
     final state = themStates[option] ?? OptionState.no;
-    if (state == OptionState.yes) {
-      themStates[option] = OptionState.wantNo;
-      _send(dont, option);
+    switch (state) {
+      case OptionState.yes:
+        themStates[option] = OptionState.wantNo;
+        _send(dont, option);
+        break;
+      case OptionState.wantYes:
+        themStates[option] = OptionState.wantYesOpposite;
+        break;
+      case OptionState.wantNoOpposite:
+        themStates[option] = OptionState.wantNo;
+        break;
+      case OptionState.no:
+      case OptionState.wantNo:
+      case OptionState.wantYesOpposite:
+        break;
     }
   }
 
   void requestWill(int option) {
     final state = usStates[option] ?? OptionState.no;
-    if (state == OptionState.no) {
-      usStates[option] = OptionState.wantYes;
-      _send(will, option);
+    switch (state) {
+      case OptionState.no:
+        usStates[option] = OptionState.wantYes;
+        _send(will, option);
+        break;
+      case OptionState.wantNo:
+        usStates[option] = OptionState.wantNoOpposite;
+        break;
+      case OptionState.wantYesOpposite:
+        usStates[option] = OptionState.wantYes;
+        break;
+      case OptionState.yes:
+      case OptionState.wantYes:
+      case OptionState.wantNoOpposite:
+        break;
     }
   }
 
   void requestWont(int option) {
     final state = usStates[option] ?? OptionState.no;
-    if (state == OptionState.yes) {
-      usStates[option] = OptionState.wantNo;
-      _send(wont, option);
+    switch (state) {
+      case OptionState.yes:
+        usStates[option] = OptionState.wantNo;
+        _send(wont, option);
+        break;
+      case OptionState.wantYes:
+        usStates[option] = OptionState.wantYesOpposite;
+        break;
+      case OptionState.wantNoOpposite:
+        usStates[option] = OptionState.wantNo;
+        break;
+      case OptionState.no:
+      case OptionState.wantNo:
+      case OptionState.wantYesOpposite:
+        break;
     }
   }
 
