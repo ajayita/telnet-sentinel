@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added a high-level `TelnetAuditor` facade class to encapsulate socket connection lifecycle, sequential probe execution, connection teardown, and Sniffer hooks under a clean client API.
+- Added new automated verification tests for all audit remediations, including memory ceiling limits (throwing `TelnetProtocolException`), true Q-method intermediate queue state transitions, and safe GMCP malformed UTF-8 parsing.
+- Added ADR-0004 to record the findings remediation and the design of the `TelnetAuditor` facade.
 - Added a GitHub Pages root landing page under `docs/` and a `.nojekyll` marker so the generated `docs/api/` documentation can be published cleanly.
 - Added committed manual Telnet verification tooling for running the current full probe suite against a controlled local `127.0.0.1:2323` target.
 - Added probe scenario self-tests with dedicated loopback `RawSocket` targets for AYT, handshake, GMCP, negotiation-loop, and malformed-IAC probe behavior.
@@ -16,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Remediated low-level transport (`TelnetTransport`) buffer exhaustion (DoS) with a strict `64KB` size limit safeguard.
+- Remediated socket event hangs by wrapping reading in a robust loop that fully drains all available data buffers.
+- Remediated GMCP parser crash vulnerabilities by wrapping UTF-8 payload decoding in try-catch blocks and enabling `allowMalformed: true`.
+- Remediated MCCP2 decompressor resource leak by retaining and explicitly closing the chunked conversion sink during transport shutdown.
+- Remediated incomplete RFC 1143 Q-method implementation in the state manager by adding all six FSM states and the official state transition table.
+- Remediated probe event listener crash risk (`StateError`) by adding safe completion checks to `HandshakeProbe` and `BinaryModeProbe`.
+- Remediated GMCP subnegotiation byte corruption by unescaping raw double `255` IAC sequences inside subnegotiation payloads.
+- Relocated the scratch diagnostic script `check_zlib.dart` to the manual verification tooling folder (`tool/manual_telnet_verification/`).
+- Shifted `yaml` dependency in `pubspec.yaml` from standard `dependencies` to `dev_dependencies` to decrease transitive library footprint.
+- Refactored CLI utility entry point (`bin/telnet_sentinel.dart`) to consume the high-level `TelnetAuditor` facade.
 - Restored `origin/main` as the canonical baseline while preserving the divergent local self-test redesign on `backup/local-self-test-redesign`.
 - Updated the testing handbook to distinguish fixture-based transcript tests from full probe scenario tests.
 
