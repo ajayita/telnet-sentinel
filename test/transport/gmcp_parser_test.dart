@@ -87,5 +87,10 @@ void main() {
       expect(event.message, equals('Welcome'));
       expect(event.data, isEmpty);
     });
+
+    test('should handle malformed UTF-8 gracefully without throwing', () {
+      final bytes = [255, 250, 201, 0xC0, 0xAF, 0xFF, 0xFE, 255, 240];
+      expect(() => GmcpParser.parse(bytes), returnsNormally);
+    });
   });
 }

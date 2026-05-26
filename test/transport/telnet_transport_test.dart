@@ -173,7 +173,6 @@ void main() {
         0x18,
         0x01,
         0xFF,
-        0xFF,
         0x02,
         0xFF,
         0xF0,
@@ -205,5 +204,27 @@ void main() {
         expect(events[0].bytes, [0xFF, 0xFA, 0x18, 0xFF, 0x01, 0xFF, 0xF0]);
       },
     );
+
+    test('enforces memory buffer ceiling limit (>64KB)', () async {
+      final completer = Completer<void>();
+      Object? streamError;
+
+      transport.events.listen(
+        (_) {},
+        onError: (err) {
+          streamError = err;
+          completer.complete();
+        },
+      );
+
+      // Write >64KB of junk data to trigger TelnetProtocolException
+      final hugeData = List<int>.filled(66000, 65);
+      clientSocket.write(hugeData);
+
+      await completer.future.timeout(Duration(seconds: 5));
+
+      expect(streamError, isA<TelnetProtocolException>());
+      expect(streamError.toString(), contains('Buffer size ceiling exceeded'));
+    });
   });
 }
