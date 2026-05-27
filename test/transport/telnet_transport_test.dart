@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:test/test.dart';
-import 'package:telnet_sentinel/models/telnet_event.dart';
-import 'package:telnet_sentinel/transport/telnet_transport.dart';
+import 'package:telnet_sentinel/src/models/telnet_event.dart';
+import 'package:telnet_sentinel/src/transport/telnet_transport.dart';
 
 void main() {
   group('TelnetTransport', () {
@@ -167,17 +167,7 @@ void main() {
       expect(events.length, 3);
       expect(events[0].type, TelnetEventType.data);
       expect(events[1].type, TelnetEventType.iac);
-      expect(events[1].bytes, [
-        0xFF,
-        0xFA,
-        0x18,
-        0x01,
-        0xFF,
-        0xFF,
-        0x02,
-        0xFF,
-        0xF0,
-      ]);
+      expect(events[1].bytes, [0xFF, 0xFA, 0x18, 0x01, 0xFF, 0x02, 0xFF, 0xF0]);
       expect(events[2].type, TelnetEventType.data);
     });
 
@@ -205,5 +195,27 @@ void main() {
         expect(events[0].bytes, [0xFF, 0xFA, 0x18, 0xFF, 0x01, 0xFF, 0xF0]);
       },
     );
+
+    test('enforces memory buffer ceiling limit (>64KB)', () async {
+      final completer = Completer<void>();
+      Object? streamError;
+
+      transport.events.listen(
+        (_) {},
+        onError: (err) {
+          streamError = err;
+          completer.complete();
+        },
+      );
+
+      // Write >64KB of junk data to trigger TelnetProtocolException
+      final hugeData = List<int>.filled(66000, 65);
+      clientSocket.write(hugeData);
+
+      await completer.future.timeout(Duration(seconds: 5));
+
+      expect(streamError, isA<TelnetProtocolException>());
+      expect(streamError.toString(), contains('Buffer size ceiling exceeded'));
+    });
   });
 }

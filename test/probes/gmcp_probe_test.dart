@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:test/test.dart';
-import 'package:telnet_sentinel/transport/telnet_transport.dart';
-import 'package:telnet_sentinel/probes/gmcp_probe.dart';
-import 'package:telnet_sentinel/models/audit_result.dart';
+import 'package:telnet_sentinel/src/transport/telnet_transport.dart';
+import 'package:telnet_sentinel/src/probes/gmcp_probe.dart';
+import 'package:telnet_sentinel/src/models/audit_result.dart';
 
 void main() {
   group('GmcpProbe', () {
@@ -143,6 +143,35 @@ void main() {
       final result = await probe.run(transport);
       expect(result.status, AuditStatus.fail);
       expect(result.message, contains('Received malformed GMCP message'));
+    });
+
+    test('passes when server sends GMCP with trailing null bytes', () async {
+      final probe = GmcpProbe();
+
+      serverSideSocket.listen((event) {
+        if (event == RawSocketEvent.read) {
+          final bytes = serverSideSocket.read();
+          if (bytes != null) {
+            for (int i = 0; i < bytes.length - 2; i++) {
+              if (bytes[i] == 255 &&
+                  bytes[i + 1] == 253 &&
+                  bytes[i + 2] == 201) {
+                serverSideSocket.write([255, 251, 201]);
+                // Core.Hello {} followed by \u0000 and trailing 0x00 bytes
+                final jsonPart = 'Core.Hello {}';
+                final payload = [...utf8.encode(jsonPart), 0, 0];
+                final sbMessage = [255, 250, 201, ...payload, 255, 240];
+                serverSideSocket.write(sbMessage);
+                break;
+              }
+            }
+          }
+        }
+      });
+
+      final result = await probe.run(transport);
+      expect(result.status, AuditStatus.pass);
+      expect(result.message, contains('GMCP negotiation successful'));
     });
   });
 }

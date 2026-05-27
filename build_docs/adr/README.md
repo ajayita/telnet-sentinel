@@ -2,6 +2,16 @@
 
 Architecture Decision Records (ADRs) are used to record significant design decisions, the context in which they were made, and the consequences of those decisions.
 
+## Index of ADRs
+
+- [ADR-0001: Adopt Repository Documentation Architecture](0001-adopt-repository-documentation-architecture.md) - Accepted
+- [ADR-0002: Use RawSocket for Byte-Level Protocol Control](0002-use-rawsocket-for-byte-level-protocol-control.md) - Accepted
+- [ADR-0003: Complement Fixtures with Probe Scenario Tests](0003-complement-fixtures-with-probe-scenario-tests.md) - Accepted
+- [ADR-0004: Remediate Adversarial Audit Findings and Introduce TelnetAuditor Facade](0004-remediate-audit-findings-and-introduce-telnet-auditor.md) - Accepted
+- [ADR-0005: Remediate Pre-Publication Adversarial Audit Findings](0005-remediate-adversarial-audit-findings.md) - Accepted
+
+---
+
 ## When to Create an ADR
 
 Create an ADR when you make a significant technical decision that:

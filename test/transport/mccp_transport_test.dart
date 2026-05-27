@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:telnet_sentinel/transport/telnet_transport.dart';
-import 'package:telnet_sentinel/models/telnet_event.dart';
+import 'package:telnet_sentinel/src/transport/telnet_transport.dart';
+import 'package:telnet_sentinel/src/models/telnet_event.dart';
 
 class MockRawSocket extends Stream<RawSocketEvent> implements RawSocket {
   final StreamController<RawSocketEvent> _controller =
@@ -34,6 +34,11 @@ class MockRawSocket extends Stream<RawSocketEvent> implements RawSocket {
   Uint8List? read([int? len]) {
     if (_readBuffer.isEmpty) return null;
     return _readBuffer.removeAt(0);
+  }
+
+  @override
+  int available() {
+    return _readBuffer.fold(0, (sum, list) => sum + list.length);
   }
 
   @override

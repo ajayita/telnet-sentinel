@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
-import 'package:telnet_sentinel/models/audit_result.dart';
-import 'package:telnet_sentinel/models/audit_report.dart';
+import 'package:telnet_sentinel/src/models/audit_result.dart';
+import 'package:telnet_sentinel/src/models/audit_report.dart';
 
 void main() {
   group('AuditResult JSON Serialization', () {

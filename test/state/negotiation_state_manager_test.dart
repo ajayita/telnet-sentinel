@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:telnet_sentinel/state/negotiation_state_manager.dart';
+import 'package:telnet_sentinel/src/state/negotiation_state_manager.dart';
 
 void main() {
   group('NegotiationStateManager', () {
@@ -162,6 +162,43 @@ void main() {
 
         manager.handleDont(option);
         expect(sentBytes, isEmpty);
+      },
+    );
+
+    test(
+      'RFC 1143 Q-Method: requestDont during wantYes transitions to wantYesOpposite, and receiving WILL sends DONT and moves to wantNo',
+      () {
+        const option = 3;
+        manager.requestDo(option); // -> wantYes
+        sentBytes.clear();
+
+        manager.requestDont(option); // -> wantYesOpposite
+        expect(sentBytes, isEmpty); // Shouldn't send anything yet
+
+        manager.handleWill(option); // receiving WILL
+        expect(sentBytes, equals([255, 254, 3])); // sends DONT
+        expect(manager.themStates[option], equals(OptionState.wantNo));
+      },
+    );
+
+    test(
+      'RFC 1143 Q-Method: requestDo during wantNo transitions to wantNoOpposite, and receiving WONT sends DO and moves to wantYes',
+      () {
+        const option = 3;
+        manager.handleWill(option); // -> YES
+        sentBytes.clear();
+
+        manager.requestDont(option); // -> wantNo
+        manager.requestDo(option); // -> wantNoOpposite
+        expect(
+          sentBytes,
+          equals([255, 254, 3]),
+        ); // sent DONT first, no new bytes on opposite queue
+        sentBytes.clear();
+
+        manager.handleWont(option); // receiving WONT
+        expect(sentBytes, equals([255, 253, 3])); // sends DO
+        expect(manager.themStates[option], equals(OptionState.wantYes));
       },
     );
 

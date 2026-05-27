@@ -4,9 +4,9 @@ This document provides instructions for coding agents, AI tools, and automated a
 
 ## Repository Organization
 
-- **Authoritative Context**: Use `docs/handbook/` for the current explanation of how the system works.
-- **Design Decisions**: Use `docs/adr/` for the authoritative record of accepted design decisions and constraints.
-- **Temporary Notes**: Treat `docs/working-notes/` as scratch space only. Do not treat as authoritative unless explicitly instructed.
+- **Authoritative Context**: Use `build_docs/handbook/` for the current explanation of how the system works.
+- **Design Decisions**: Use `build_docs/adr/` for the authoritative record of accepted design decisions and constraints.
+- **Temporary Notes**: Treat `build_docs/working-notes/` as scratch space only. Do not treat as authoritative unless explicitly instructed.
 - **Entry Points**: `bin/` contains the CLI application entry points.
 - **Local Context**: Look for folder-level `AGENTS.md` files for specific guidance within subdirectories.
 

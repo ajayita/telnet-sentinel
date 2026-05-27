@@ -14,16 +14,18 @@ This page describes the repository layout and the responsibilities of major fold
 ├── bin/                  # Application entry points.
 │   ├── telnet_sentinel.dart # Main CLI wrapper.
 │   └── AGENTS.md         # CLI-specific agent instructions.
-├── docs/                 # Project documentation hub.
+├── build_docs/           # Project documentation source hub.
 │   ├── handbook/         # Authoritative developer handbook.
 │   ├── adr/              # Architecture Decision Records.
 │   ├── working-notes/    # Exploratory and planning notes.
 │   └── superpowers/      # Detailed implementation plans.
 ├── lib/                  # Core framework library.
-│   ├── models/           # Data models for events, results, and reports.
-│   ├── probes/           # Active auditing probes and interfaces.
-│   ├── state/            # Negotiation state machine logic.
-│   └── transport/        # Low-level socket and protocol parsing.
+│   ├── telnet_sentinel.dart # Public library entry point.
+│   └── src/              # Internal implementation files.
+│       ├── models/       # Data models for events, results, and reports.
+│       ├── probes/       # Active auditing probes and interfaces.
+│       ├── state/        # Negotiation state machine logic.
+│       └── transport/    # Low-level socket and protocol parsing.
 └── test/                 # Comprehensive test suite (Unit and Integration).
 ```
 
@@ -31,16 +33,17 @@ This page describes the repository layout and the responsibilities of major fold
 
 ### `lib/`
 The core framework, designed with a library-first approach.
-- `lib/transport/`: Manages `RawSocket` events and parses the byte stream into `TelnetEvent` objects. Includes specialized parsers for GMCP.
-- `lib/state/`: Implements the Telnet negotiation state machine (RFC 1143).
-- `lib/probes/`: Contains the `Probe` interface and implementations for various audits (Handshake, MCCP, GMCP, etc.).
-- `lib/models/`: Defines the data structures used throughout the application.
+- `lib/telnet_sentinel.dart`: The clean exported public API facade of the library.
+- `lib/src/transport/`: Manages `RawSocket` events and parses the byte stream into `TelnetEvent` objects. Includes specialized parsers for GMCP.
+- `lib/src/state/`: Implements the Telnet negotiation state machine (RFC 1143).
+- `lib/src/probes/`: Contains the `Probe` interface and implementations for various audits (Handshake, MCCP, GMCP, etc.).
+- `lib/src/models/`: Defines the data structures used throughout the application.
 
 ### `bin/`
 Contains the CLI wrapper for the library. It is responsible for orchestrating audits in CI/CD environments and returning appropriate exit codes.
 
-### `docs/`
-The central hub for all project documentation. Follows the structure defined in [ADR-0001](../adr/0001-adopt-repository-documentation-architecture.md).
+### `build_docs/`
+The central source hub for all project documentation. Follows the structure defined in [ADR-0001](../adr/0001-adopt-repository-documentation-architecture.md).
 
 ### `test/`
-Contains unit and integration tests. Mirrors the structure of `lib/` (and `bin/` where appropriate).
+Contains unit and integration tests. Mirrors the structure of `lib/src/` (and `bin/` where appropriate).

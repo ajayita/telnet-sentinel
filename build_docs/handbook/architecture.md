@@ -21,10 +21,11 @@ The application is structured as a **Library-First** implementation, ensuring th
 ### Core Components
 
 1.  **Low-Level Transport (`RawSocket`)**: Bypasses standard buffering to provide byte-level interception of `IAC` sequences. Includes a real-time Zlib decompression layer for MCCP2. (See [ADR-0002](../adr/0002-use-rawsocket-for-byte-level-protocol-control.md))
-2.  **Negotiation State Manager**: A centralized state machine that handles the `WILL/WONT/DO/DONT` handshake using the **RFC 1143 Q-method**. It prevents negotiation loops and tracks state transitions for auditing.
+2.  **Negotiation State Manager**: A centralized state machine that handles the `WILL/WONT/DO/DONT` handshake using the **RFC 1143 Q-method**, implementing all six FSM states (including intermediate queue states `wantYesOpposite` and `wantNoOpposite`) to prevent negotiation loops completely under rapid handshakes.
 3.  **Probe Interface (Plugin Architecture)**: A sandbox-based framework for RFC-specific modules. Each probe can inject sequences and monitor responses in isolation.
 4.  **MUD Extension Modules**: Specialized probes for advanced features like **MCCP2** (Zlib compression) and **GMCP** (JSON out-of-band data).
 5.  **Reporting Engine**: Aggregates `AuditResult` objects into an `AuditReport`, which can be rendered as a human-readable scorecard or serialized to JSON.
+6.  **High-Level Auditor Facade (`TelnetAuditor`)**: Encapsulates socket lifecycle, connection timeouts, and sequential execution of the probe suites internally, exposing a clean client API. (See [ADR-0004](../adr/0004-remediate-audit-findings-and-introduce-telnet-auditor.md))
 
 ## The "Active Prober" Model
 
