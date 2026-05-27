@@ -226,8 +226,8 @@ class NegotiationStateManager {
     // Remove entries older than 1 second
     history.removeWhere((time) => now.difference(time).inSeconds >= 1);
 
-    if (history.length >= 5) {
-      return true; // Exceeded safety threshold of 5 changes per second
+    if (history.length >= 20) {
+      return true; // Exceeded safety threshold of 20 changes per second
     }
 
     history.add(now);

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added pre-flight reachability checks at the start of `TelnetAuditor` to fail fast and prevent infinite connect retry hangs.
+- Added option negotiation rate-limiting (maximum 20 transitions/second per option) in `NegotiationStateManager` to protect against peer-initiated loop DoS attacks.
+- Added timing (latency) and raw bytes historical tracking inside `AuditResult` and `TelnetTransport`.
+- Added welcome-banner immunity tests, pre-flight failure check, raw bytes serialization, and FSM rate-limit tests in `test/self_tests/audit_remediation_test.dart`.
+- Added ADR-0005 to record pre-publication adversarial audit remediations.
+- Added programmatic package entry point `lib/telnet_sentinel.dart` to export the public API facade cleanly.
+
+### Changed
+
 - Added a high-level `TelnetAuditor` facade class to encapsulate socket connection lifecycle, sequential probe execution, connection teardown, and Sniffer hooks under a clean client API.
 - Added new automated verification tests for all audit remediations, including memory ceiling limits (throwing `TelnetProtocolException`), true Q-method intermediate queue state transitions, and safe GMCP malformed UTF-8 parsing.
 - Added ADR-0004 to record the findings remediation and the design of the `TelnetAuditor` facade.
