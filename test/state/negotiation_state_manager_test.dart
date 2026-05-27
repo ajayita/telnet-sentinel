@@ -169,5 +169,23 @@ void main() {
       manager.handleCommand([255, 246]); // IAC AYT
       expect(sentBytes, equals([255, 241])); // IAC NOP
     });
+
+    test('throws TelnetProtocolException when per-option rate limit exceeded', () {
+      const option = 1;
+      // 20 sends are allowed per option per second. Alternate DO/DONT to cycle state.
+      for (var i = 0; i < 10; i++) {
+        manager.handleDo(option);  // sends WILL
+        manager.handleDont(option); // sends WONT
+      }
+      expect(() => manager.handleDo(option), throwsA(isA<TelnetProtocolException>()));
+    });
+
+    test('throws TelnetProtocolException when global rate limit exceeded', () {
+      // 60 total transitions are allowed globally per second
+      for (var i = 0; i < 60; i++) {
+        manager.handleDo(i); // Use different options
+      }
+      expect(() => manager.handleDo(999), throwsA(isA<TelnetProtocolException>()));
+    });
   });
 }

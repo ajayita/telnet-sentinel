@@ -205,5 +205,23 @@ void main() {
         expect(events[0].bytes, [0xFF, 0xFA, 0x18, 0xFF, 0x01, 0xFF, 0xF0]);
       },
     );
+
+    test('rawBytesExchanged caps at 4096 bytes', () async {
+      final largeData = List<int>.filled(5000, 0x41); // 'A' repeated 5000 times
+      clientSocket.write(largeData);
+
+      // Wait for data to be processed
+      await Future.delayed(Duration(milliseconds: 100));
+
+      expect(transport.rawBytesExchanged.length, 4096);
+    });
+
+    test('write populates rawBytesExchanged', () async {
+      transport.write([0xFF, 0xFB, 0x01]);
+
+      expect(transport.rawBytesExchanged, contains(0xFF));
+      expect(transport.rawBytesExchanged, contains(0xFB));
+      expect(transport.rawBytesExchanged, contains(0x01));
+    });
   });
 }

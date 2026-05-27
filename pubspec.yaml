@@ -1,6 +1,14 @@
 name: telnet_sentinel
 description: A diagnostic and auditing framework for bridging ancient Telnet communication standards with modern software reliability.
 version: 0.0.1
+homepage: https://github.com/ajayiot/telnet-sentinel
+repository: https://github.com/ajayiot/telnet-sentinel
+issue_tracker: https://github.com/ajayiot/telnet-sentinel/issues
+topics:
+  - telnet
+  - network
+  - audit
+  - diagnostic
 
 environment:
   sdk: ^3.11.5

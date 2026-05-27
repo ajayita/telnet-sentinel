@@ -5,6 +5,8 @@ class GmcpParser {
   /// Parses raw GMCP subnegotiation bytes into a [GmcpEvent].
   ///
   /// The [bytes] should include the IAC SB 201 prefix and IAC SE suffix.
+  /// Returns `null` if the payload is malformed, contains invalid UTF-8,
+  /// or the JSON body cannot be decoded.
   static GmcpEvent? parse(List<int> bytes) {
     // Basic validation: IAC SB 201 ... IAC SE
     // Minimum length: IAC SB 201 (3) + "A.B" (3) + IAC SE (2) = 8
@@ -21,8 +23,18 @@ class GmcpParser {
     final payloadBytes = bytes.sublist(3, bytes.length - 2);
     if (payloadBytes.isEmpty) return null;
 
-    final rawString = utf8.decode(payloadBytes).trim();
+    // Decode as UTF-8; do not allow malformed sequences.
+    final String rawString;
+    try {
+      rawString = utf8.decode(payloadBytes, allowMalformed: false).trim();
+    } on FormatException {
+      return null;
+    }
     if (rawString.isEmpty) return null;
+
+    // Strip null bytes globally from the entire decoded payload.
+    final sanitized = rawString.replaceAll('\u0000', '');
+    if (sanitized.isEmpty) return null;
 
     // GMCP format: Package.Message [JSON]
     // Example: Core.Welcome {"version": "1.0"}
@@ -30,24 +42,23 @@ class GmcpParser {
     String packageMessage;
     Map<String, dynamic> data = {};
 
-    final spaceIndex = rawString.indexOf(' ');
+    final spaceIndex = sanitized.indexOf(' ');
     if (spaceIndex != -1) {
-      packageMessage = rawString.substring(0, spaceIndex);
-      final jsonPart = rawString.substring(spaceIndex + 1).trim();
+      packageMessage = sanitized.substring(0, spaceIndex);
+      final jsonPart = sanitized.substring(spaceIndex + 1).trim();
       if (jsonPart.isNotEmpty) {
         try {
           final decoded = jsonDecode(jsonPart);
           if (decoded is Map<String, dynamic>) {
             data = decoded;
           }
-        } catch (_) {
-          // If JSON is invalid, we return the event with empty data
-          // or we could potentially throw an error depending on requirements.
-          // For now, let's keep it robust.
+        } on FormatException {
+          // Malformed JSON body — treat the whole GMCP message as invalid.
+          return null;
         }
       }
     } else {
-      packageMessage = rawString;
+      packageMessage = sanitized;
     }
 
     // Split Package.Message

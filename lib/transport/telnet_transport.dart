@@ -5,14 +5,21 @@ import 'dart:typed_data';
 import 'package:telnet_sentinel/models/telnet_event.dart';
 
 class TelnetTransport {
+  static const int _maxRawBytes = 4096;
+
   final RawSocket _socket;
   final StreamController<TelnetEvent> _controller =
       StreamController<TelnetEvent>.broadcast();
   final List<int> _pendingBytes = [];
+  final List<int> _rawBytesExchanged = [];
 
   bool _isDecompressing = false;
   ByteConversionSink? _decompressorSink;
   bool _isProcessing = false;
+
+  /// Returns the raw bytes exchanged during this transport session,
+  /// capped at [_maxRawBytes] to prevent unbounded memory growth.
+  List<int> get rawBytesExchanged => List.unmodifiable(_rawBytesExchanged);
 
   TelnetTransport(this._socket) {
     _socket.listen(_onSocketEvent, onDone: _onDone, onError: _onError);
@@ -24,6 +31,7 @@ class TelnetTransport {
     if (event == RawSocketEvent.read) {
       final bytes = _socket.read();
       if (bytes != null) {
+        _appendRawBytes(bytes);
         if (_isDecompressing) {
           _decompressorSink?.add(bytes);
         } else {
@@ -32,6 +40,15 @@ class TelnetTransport {
       }
     } else if (event == RawSocketEvent.readClosed) {
       _onDone();
+    }
+  }
+
+  void _appendRawBytes(List<int> bytes) {
+    final remaining = _maxRawBytes - _rawBytesExchanged.length;
+    if (remaining > 0) {
+      _rawBytesExchanged.addAll(
+        bytes.take(remaining),
+      );
     }
   }
 
@@ -159,12 +176,17 @@ class TelnetTransport {
   }
 
   Future<void> close() async {
-    _socket.shutdown(SocketDirection.both);
-    _socket.close();
-    _onDone();
+    _decompressorSink?.close();
+    try {
+      _socket.shutdown(SocketDirection.both);
+    } finally {
+      _socket.close();
+      _onDone();
+    }
   }
 
   void write(List<int> bytes) {
+    _appendRawBytes(bytes);
     _socket.write(bytes);
   }
 

@@ -76,8 +76,27 @@ void main() {
       expect(event, isNull);
     });
 
-    test('should handle invalid JSON gracefully', () {
+    test('should return null for invalid JSON', () {
       final payload = 'Core.Welcome {invalid:json}';
+      final bytes = [255, 250, 201, ...utf8.encode(payload), 255, 240];
+
+      final event = GmcpParser.parse(bytes);
+
+      expect(event, isNull);
+    });
+
+    test('should return null for malformed UTF-8', () {
+      // Invalid UTF-8 sequence inside GMCP payload
+      final bytes = [255, 250, 201, 0x80, 0x81, 0x82, 255, 240];
+
+      final event = GmcpParser.parse(bytes);
+
+      expect(event, isNull);
+    });
+
+    test('should strip null bytes globally from payload', () {
+      // Core.Welcome with embedded nulls in package name and JSON
+      final payload = 'Co\u0000re.Welcome {"vers\u0000ion": "1.0"}';
       final bytes = [255, 250, 201, ...utf8.encode(payload), 255, 240];
 
       final event = GmcpParser.parse(bytes);
@@ -85,7 +104,7 @@ void main() {
       expect(event, isNotNull);
       expect(event!.package, equals('Core'));
       expect(event.message, equals('Welcome'));
-      expect(event.data, isEmpty);
+      expect(event.data, equals({'version': '1.0'}));
     });
   });
 }
