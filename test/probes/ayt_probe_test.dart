@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:test/test.dart';
-import 'package:telnet_sentinel/transport/telnet_transport.dart';
-import 'package:telnet_sentinel/probes/ayt_probe.dart';
-import 'package:telnet_sentinel/models/audit_result.dart';
+import 'package:telnet_sentinel/src/transport/telnet_transport.dart';
+import 'package:telnet_sentinel/src/probes/ayt_probe.dart';
+import 'package:telnet_sentinel/src/models/audit_result.dart';
 
 void main() {
   group('AytProbe', () {

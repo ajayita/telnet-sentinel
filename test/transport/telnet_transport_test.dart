@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:test/test.dart';
-import 'package:telnet_sentinel/models/telnet_event.dart';
-import 'package:telnet_sentinel/transport/telnet_transport.dart';
+import 'package:telnet_sentinel/src/models/telnet_event.dart';
+import 'package:telnet_sentinel/src/transport/telnet_transport.dart';
 
 void main() {
   group('TelnetTransport', () {

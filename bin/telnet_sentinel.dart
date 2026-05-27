@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:args/args.dart';
-import 'package:telnet_sentinel/telnet_auditor.dart';
-import 'package:telnet_sentinel/models/audit_report.dart';
-import 'package:telnet_sentinel/models/audit_result.dart';
+import 'package:telnet_sentinel/telnet_sentinel.dart';
 
 const String version = '0.0.1';
 

@@ -1,16 +1,16 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:telnet_sentinel/models/audit_result.dart';
-import 'package:telnet_sentinel/probes/ayt_probe.dart';
-import 'package:telnet_sentinel/probes/binary_mode_probe.dart';
-import 'package:telnet_sentinel/probes/gmcp_probe.dart';
-import 'package:telnet_sentinel/probes/handshake_probe.dart';
-import 'package:telnet_sentinel/probes/malformed_iac_probe.dart';
-import 'package:telnet_sentinel/probes/mccp_probe.dart';
-import 'package:telnet_sentinel/probes/negotiation_loop_probe.dart';
-import 'package:telnet_sentinel/probes/probe_interface.dart';
-import 'package:telnet_sentinel/transport/telnet_transport.dart';
+import 'package:telnet_sentinel/src/models/audit_result.dart';
+import 'package:telnet_sentinel/src/probes/ayt_probe.dart';
+import 'package:telnet_sentinel/src/probes/binary_mode_probe.dart';
+import 'package:telnet_sentinel/src/probes/gmcp_probe.dart';
+import 'package:telnet_sentinel/src/probes/handshake_probe.dart';
+import 'package:telnet_sentinel/src/probes/malformed_iac_probe.dart';
+import 'package:telnet_sentinel/src/probes/mccp_probe.dart';
+import 'package:telnet_sentinel/src/probes/negotiation_loop_probe.dart';
+import 'package:telnet_sentinel/src/probes/probe_interface.dart';
+import 'package:telnet_sentinel/src/transport/telnet_transport.dart';
 
 const _localHost = '127.0.0.1';
 const _localPort = 2323;

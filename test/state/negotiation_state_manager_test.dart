@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:telnet_sentinel/state/negotiation_state_manager.dart';
+import 'package:telnet_sentinel/src/state/negotiation_state_manager.dart';
 
 void main() {
   group('NegotiationStateManager', () {

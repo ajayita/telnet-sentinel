@@ -1,13 +1,13 @@
 import 'dart:io';
 
-import 'package:telnet_sentinel/models/audit_result.dart';
-import 'package:telnet_sentinel/probes/ayt_probe.dart';
-import 'package:telnet_sentinel/probes/gmcp_probe.dart';
-import 'package:telnet_sentinel/probes/handshake_probe.dart';
-import 'package:telnet_sentinel/probes/malformed_iac_probe.dart';
-import 'package:telnet_sentinel/probes/negotiation_loop_probe.dart';
-import 'package:telnet_sentinel/probes/probe_interface.dart';
-import 'package:telnet_sentinel/transport/telnet_transport.dart';
+import 'package:telnet_sentinel/src/models/audit_result.dart';
+import 'package:telnet_sentinel/src/probes/ayt_probe.dart';
+import 'package:telnet_sentinel/src/probes/gmcp_probe.dart';
+import 'package:telnet_sentinel/src/probes/handshake_probe.dart';
+import 'package:telnet_sentinel/src/probes/malformed_iac_probe.dart';
+import 'package:telnet_sentinel/src/probes/negotiation_loop_probe.dart';
+import 'package:telnet_sentinel/src/probes/probe_interface.dart';
+import 'package:telnet_sentinel/src/transport/telnet_transport.dart';
 import 'package:test/test.dart';
 
 import '../fake_servers/probe_scenario_servers.dart';

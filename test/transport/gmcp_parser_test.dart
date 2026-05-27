@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:test/test.dart';
-import 'package:telnet_sentinel/transport/gmcp_parser.dart';
+import 'package:telnet_sentinel/src/transport/gmcp_parser.dart';
 
 void main() {
   group('GmcpParser', () {
