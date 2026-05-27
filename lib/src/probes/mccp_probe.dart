@@ -84,6 +84,17 @@ class MccpProbe implements Probe {
           );
         }
       },
+      onDone: () {
+        if (!completer.isCompleted) {
+          completer.complete(
+            AuditResult(
+              name,
+              AuditStatus.fail,
+              'Connection abruptly closed by server.',
+            ),
+          );
+        }
+      },
     );
 
     try {

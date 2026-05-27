@@ -25,6 +25,7 @@ class NegotiationStateManager {
   final void Function(Uint8List) onSend;
   final Map<int, OptionState> usStates = {};
   final Map<int, OptionState> themStates = {};
+  final Map<int, List<DateTime>> _negotiationHistory = {};
 
   NegotiationStateManager({required this.onSend});
 
@@ -218,7 +219,26 @@ class NegotiationStateManager {
     }
   }
 
+  bool _isRateLimited(int option) {
+    final now = DateTime.now();
+    final history = _negotiationHistory.putIfAbsent(option, () => []);
+
+    // Remove entries older than 1 second
+    history.removeWhere((time) => now.difference(time).inSeconds >= 1);
+
+    if (history.length >= 5) {
+      return true; // Exceeded safety threshold of 5 changes per second
+    }
+
+    history.add(now);
+    return false;
+  }
+
   void _send(int command, int option) {
+    if (_isRateLimited(option)) {
+      // Halt option reply to protect against negotiation loop DoS
+      return;
+    }
     onSend(Uint8List.fromList([iac, command, option]));
   }
 

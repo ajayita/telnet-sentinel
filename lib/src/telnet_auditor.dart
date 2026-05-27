@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:async';
-import 'dart:convert';
 import 'package:telnet_sentinel/src/transport/telnet_transport.dart';
 import 'package:telnet_sentinel/src/models/telnet_event.dart';
 import 'package:telnet_sentinel/src/models/audit_report.dart';
@@ -42,22 +41,49 @@ class TelnetAuditor {
 
   /// Runs the complete suite of Telnet probes.
   ///
-  /// [verbose] triggers console logging of probe runs if set to true.
-  /// [sniffer] prints a default color-coded real-time Telnet sequence dump.
+  /// [onLog] provides a callback for verbose logging message strings.
   /// [onSnifferEvent] provides a hook for custom real-time traffic visualization.
   Future<AuditReport> runSuite({
-    bool verbose = false,
-    bool sniffer = false,
+    void Function(String)? onLog,
     void Function(TelnetEvent)? onSnifferEvent,
   }) async {
     final auditResults = <AuditResult>[];
 
+    // Pre-flight connection check
+    if (onLog != null) {
+      onLog('Performing pre-flight connection check to $host:$port...');
+    }
+    RawSocket? preFlightSocket;
+    try {
+      preFlightSocket = await RawSocket.connect(
+        host,
+        port,
+        timeout: connectionTimeout,
+      );
+      await preFlightSocket.close();
+    } catch (e) {
+      if (onLog != null) {
+        onLog('Pre-flight connection check failed: $e');
+      }
+      return AuditReport(
+        '$host:$port',
+        [
+          AuditResult(
+            'Pre-Flight Connection Check',
+            AuditStatus.fail,
+            'Host unreachable or connection refused: $e',
+          )
+        ],
+      );
+    }
+
     for (final probe in probes) {
-      if (verbose) {
-        print('[VERBOSE] Running ${probe.name}...');
+      if (onLog != null) {
+        onLog('Running ${probe.name}...');
       }
 
       RawSocket? socket;
+      final stopwatch = Stopwatch()..start();
       try {
         socket = await RawSocket.connect(
           host,
@@ -67,17 +93,24 @@ class TelnetAuditor {
         final transport = TelnetTransport(socket);
 
         StreamSubscription<TelnetEvent>? snifferSub;
-        if (sniffer || onSnifferEvent != null) {
+        if (onSnifferEvent != null) {
           snifferSub = transport.events.listen((event) {
-            if (onSnifferEvent != null) {
-              onSnifferEvent(event);
-            } else if (sniffer) {
-              _defaultSnifferPrint(event);
-            }
+            onSnifferEvent(event);
           });
         }
 
-        final result = await probe.run(transport);
+        final baseResult = await probe.run(transport);
+        stopwatch.stop();
+
+        // Enrich the AuditResult with latency and rawBytesExchanged
+        final result = AuditResult(
+          baseResult.probeName,
+          baseResult.status,
+          baseResult.message,
+          latency: stopwatch.elapsed,
+          rawBytesExchanged: transport.rawBytesExchanged,
+          metadata: baseResult.metadata,
+        );
         auditResults.add(result);
 
         if (snifferSub != null) {
@@ -85,11 +118,13 @@ class TelnetAuditor {
         }
         await transport.close();
       } catch (e) {
+        stopwatch.stop();
         auditResults.add(
           AuditResult(
             probe.name,
             AuditStatus.fail,
             'Connection/Execution error: $e',
+            latency: stopwatch.elapsed,
           ),
         );
         if (socket != null) {
@@ -101,18 +136,7 @@ class TelnetAuditor {
     return AuditReport('$host:$port', auditResults);
   }
 
-  void _defaultSnifferPrint(TelnetEvent event) {
-    if (event.type == TelnetEventType.iac) {
-      final description = _describeIac(event.bytes);
-      print('\x1B[36m[IAC] $description\x1B[0m'); // Cyan for IAC
-    } else {
-      final data = utf8.decode(event.bytes, allowMalformed: true);
-      final escapedData = data.replaceAll('\r', '\\r').replaceAll('\n', '\\n');
-      print('\x1B[32m[DATA] $escapedData\x1B[0m'); // Green for DATA
-    }
-  }
-
-  String _describeIac(List<int> bytes) {
+  static String describeIac(List<int> bytes) {
     if (bytes.isEmpty) return 'EMPTY';
     if (bytes[0] != 255) return 'INVALID (not starting with IAC)';
 

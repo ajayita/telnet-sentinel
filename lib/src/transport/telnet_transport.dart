@@ -9,10 +9,17 @@ class TelnetTransport {
   final StreamController<TelnetEvent> _controller =
       StreamController<TelnetEvent>.broadcast();
   final List<int> _pendingBytes = [];
+  final List<int> _rawBytesExchanged = [];
 
   bool _isDecompressing = false;
   ByteConversionSink? _decompressorSink;
   bool _isProcessing = false;
+
+  List<int> get rawBytesExchanged => List.unmodifiable(_rawBytesExchanged);
+
+  void clearRawBytes() {
+    _rawBytesExchanged.clear();
+  }
 
   TelnetTransport(this._socket) {
     _socket.listen(_onSocketEvent, onDone: _onDone, onError: _onError);
@@ -30,6 +37,7 @@ class TelnetTransport {
           // If available() throws/is not supported (e.g. basic mocks), read once fallback
           final bytes = _socket.read();
           if (bytes != null && bytes.isNotEmpty) {
+            _rawBytesExchanged.addAll(bytes);
             if (_isDecompressing) {
               _decompressorSink?.add(bytes);
             } else {
@@ -42,6 +50,7 @@ class TelnetTransport {
         while (avail > 0) {
           final bytes = _socket.read();
           if (bytes == null || bytes.isEmpty) break;
+          _rawBytesExchanged.addAll(bytes);
           if (_isDecompressing) {
             _decompressorSink?.add(bytes);
           } else {
@@ -206,12 +215,18 @@ class TelnetTransport {
     try {
       _decompressorSink?.close();
     } catch (_) {}
-    _socket.shutdown(SocketDirection.both);
-    _socket.close();
-    _onDone();
+    try {
+      _socket.shutdown(SocketDirection.both);
+    } catch (_) {
+      // Ignored if socket has already been closed/reset by remote peer
+    } finally {
+      _socket.close();
+      _onDone();
+    }
   }
 
   void write(List<int> bytes) {
+    _rawBytesExchanged.addAll(bytes);
     _socket.write(bytes);
   }
 

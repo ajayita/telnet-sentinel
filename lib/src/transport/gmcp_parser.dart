@@ -18,7 +18,14 @@ class GmcpParser {
     }
 
     // Extract the payload (everything between option 201 and IAC SE)
-    final payloadBytes = bytes.sublist(3, bytes.length - 2);
+    final rawPayload = bytes.sublist(3, bytes.length - 2);
+    if (rawPayload.isEmpty) return null;
+
+    // Strip trailing null bytes (0x00) which are common in MUD servers
+    List<int> payloadBytes = rawPayload;
+    while (payloadBytes.isNotEmpty && payloadBytes.last == 0) {
+      payloadBytes = payloadBytes.sublist(0, payloadBytes.length - 1);
+    }
     if (payloadBytes.isEmpty) return null;
 
     String rawString;
@@ -38,7 +45,7 @@ class GmcpParser {
     final spaceIndex = rawString.indexOf(' ');
     if (spaceIndex != -1) {
       packageMessage = rawString.substring(0, spaceIndex);
-      final jsonPart = rawString.substring(spaceIndex + 1).trim();
+      final jsonPart = rawString.substring(spaceIndex + 1).replaceAll('\u0000', '').trim();
       if (jsonPart.isNotEmpty) {
         try {
           final decoded = jsonDecode(jsonPart);

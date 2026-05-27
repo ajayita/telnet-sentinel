@@ -13,6 +13,8 @@ class AytProbe implements Probe {
   @override
   Future<AuditResult> run(TelnetTransport transport) async {
     final completer = Completer<AuditResult>();
+    bool aytSent = false;
+    Timer? drainTimer;
 
     final stateManager = NegotiationStateManager(
       onSend: (bytes) => transport.write(bytes),
@@ -20,6 +22,10 @@ class AytProbe implements Probe {
 
     final subscription = transport.events.listen(
       (event) {
+        if (!aytSent) {
+          // Drain any welcome banner sent by server immediately on connection
+          return;
+        }
         if (!completer.isCompleted) {
           if (event.type == TelnetEventType.iac) {
             stateManager.handleCommand(event.bytes);
@@ -52,11 +58,38 @@ class AytProbe implements Probe {
           );
         }
       },
+      onDone: () {
+        if (!completer.isCompleted) {
+          completer.complete(
+            AuditResult(
+              name,
+              AuditStatus.fail,
+              'Connection abruptly closed by server.',
+            ),
+          );
+        }
+      },
     );
 
     try {
-      // Send IAC AYT (255, 246)
-      transport.write(Uint8List.fromList([255, 246]));
+      // Drain welcome banner for 200ms before sending AYT
+      drainTimer = Timer(const Duration(milliseconds: 200), () {
+        try {
+          // Send IAC AYT (255, 246)
+          transport.write(Uint8List.fromList([255, 246]));
+          aytSent = true;
+        } catch (e) {
+          if (!completer.isCompleted) {
+            completer.complete(
+              AuditResult(
+                name,
+                AuditStatus.fail,
+                'Error sending AYT command: $e',
+              ),
+            );
+          }
+        }
+      });
 
       return await completer.future.timeout(
         const Duration(seconds: 5),
@@ -82,6 +115,7 @@ class AytProbe implements Probe {
         'Exception during AYT probe: $e',
       );
     } finally {
+      drainTimer?.cancel();
       await subscription.cancel();
     }
   }

@@ -88,8 +88,8 @@ Future<void> main(List<String> arguments) async {
 
     final auditor = TelnetAuditor(host: host, port: port);
     final report = await auditor.runSuite(
-      verbose: verbose && !outputJson,
-      sniffer: sniffer && !outputJson,
+      onLog: verbose && !outputJson ? (msg) => print('[VERBOSE] $msg') : null,
+      onSnifferEvent: sniffer && !outputJson ? _printSnifferEvent : null,
     );
     if (outputJson) {
       print(jsonEncode(report.toJson()));
@@ -116,6 +116,17 @@ Future<void> main(List<String> arguments) async {
   }
 }
 
+void _printSnifferEvent(TelnetEvent event) {
+  if (event.type == TelnetEventType.iac) {
+    final description = TelnetAuditor.describeIac(event.bytes);
+    print('\x1B[36m[IAC] $description\x1B[0m'); // Cyan for IAC
+  } else {
+    final data = utf8.decode(event.bytes, allowMalformed: true);
+    final escapedData = data.replaceAll('\r', '\\r').replaceAll('\n', '\\n');
+    print('\x1B[32m[DATA] $escapedData\x1B[0m'); // Green for DATA
+  }
+}
+
 void _printReport(AuditReport report) {
   print('\n--- Audit Report ---');
   print('Target:    ${report.target}');
@@ -124,7 +135,11 @@ void _printReport(AuditReport report) {
 
   for (final result in report.results) {
     final statusLabel = _getStatusLabel(result.status);
-    print('$statusLabel [${result.probeName}] ${result.message}');
+    final latencyStr = '${result.latency.inMilliseconds}ms';
+    print('$statusLabel [${result.probeName}] ($latencyStr) ${result.message}');
+    if (result.status == AuditStatus.fail && result.rawBytesExchanged != null && result.rawBytesExchanged!.isNotEmpty) {
+      print('      Raw Bytes Exchanged: ${result.rawBytesExchanged}');
+    }
   }
   print('');
 
